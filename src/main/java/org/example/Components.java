@@ -110,7 +110,6 @@ public final class Components {
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setOpaque(true);
         b.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-
         b.addMouseListener(new MouseAdapter() {
             @Override public void mouseEntered(MouseEvent e) {
                 b.setForeground(Theme.WHITE);
@@ -139,7 +138,7 @@ public final class Components {
     // ── Inputs ────────────────────────────────────────────────
 
     /**
-     * Creates a styled text field.
+     * Creates a styled text field with placeholder hint.
      * @param placeholder placeholder hint text
      * @return styled JTextField
      */
@@ -152,7 +151,8 @@ public final class Components {
                     g2.setColor(Theme.MUTED);
                     g2.setFont(getFont());
                     Insets i = getInsets();
-                    g2.drawString(placeholder, i.left, getHeight() / 2 + g2.getFontMetrics().getAscent() / 2 - 2);
+                    g2.drawString(placeholder, i.left,
+                        getHeight() / 2 + g2.getFontMetrics().getAscent() / 2 - 2);
                 }
             }
         };
@@ -216,9 +216,9 @@ public final class Components {
 
     /**
      * Creates a stat card displaying a large number and a description.
-     * @param number    the big number string
-     * @param desc      description below
-     * @param numColor  color for the number
+     * @param number   the big number string
+     * @param desc     description below
+     * @param numColor color for the number
      * @return styled JPanel
      */
     public static JPanel statCard(String number, String desc, Color numColor) {
@@ -240,9 +240,9 @@ public final class Components {
 
     /**
      * Creates a colored status tag label.
-     * @param text    tag text (e.g. "Confirmed")
-     * @param bg      background color
-     * @param fg      foreground color
+     * @param text tag text
+     * @param bg   background color
+     * @param fg   foreground color
      * @return styled JLabel as tag
      */
     public static JLabel tag(String text, Color bg, Color fg) {
@@ -299,10 +299,8 @@ public final class Components {
         header.setBorder(new MatteBorder(0, 0, 1, 0, Theme.BORDER));
         header.setReorderingAllowed(false);
 
-        // Alternate row colors
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object v,
+            @Override public Component getTableCellRendererComponent(JTable t, Object v,
                     boolean sel, boolean focus, int row, int col) {
                 super.getTableCellRendererComponent(t, v, sel, focus, row, col);
                 setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
@@ -328,15 +326,15 @@ public final class Components {
         return s;
     }
 
-    // ── Notification Panel ────────────────────────────────────
+    // ── Notification Row ──────────────────────────────────────
 
     /**
-     * Creates a notification row panel.
-     * @param icon    emoji icon
-     * @param title   bold title
-     * @param body    message body
-     * @param time    time string
-     * @param accent  left-border accent color
+     * Creates a notification row panel with left accent border.
+     * @param icon   emoji icon
+     * @param title  bold title text
+     * @param body   message body text
+     * @param time   timestamp string
+     * @param accent left-border accent color
      * @return styled JPanel
      */
     public static JPanel notifRow(String icon, String title, String body, String time, Color accent) {
@@ -353,24 +351,24 @@ public final class Components {
         ico.setFont(new Font("SansSerif", Font.PLAIN, 16));
         JPanel text = new JPanel(new GridLayout(3, 1, 0, 1));
         text.setOpaque(false);
-        JLabel t = new JLabel(title); t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
-        JLabel b = new JLabel(body);  b.setFont(Theme.FONT_BODY); b.setForeground(Theme.INK);
-        JLabel ts = new JLabel(time); ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
+        JLabel t  = new JLabel(title); t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
+        JLabel b  = new JLabel(body);  b.setFont(Theme.FONT_BODY);  b.setForeground(Theme.INK);
+        JLabel ts = new JLabel(time);  ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
         text.add(t); text.add(b); text.add(ts);
-        row.add(ico, BorderLayout.WEST);
+        row.add(ico,  BorderLayout.WEST);
         row.add(text, BorderLayout.CENTER);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
         return row;
     }
 
-    // ── Inner: Round Button ───────────────────────────────────
+    // ── Round Button ──────────────────────────────────────────
 
     /**
-     * A custom JButton with rounded corners and hover effect.
+     * A custom JButton with rounded corners and hover darkening effect.
      */
     public static class RoundButton extends JButton {
-        private Color bg, fg;
-        private Color borderColor;
+        private final Color bg, fg;
+        private Color   borderColor;
         private boolean hovered = false;
 
         /**
@@ -388,24 +386,22 @@ public final class Components {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setBorder(BorderFactory.createEmptyBorder(7, 16, 7, 16));
             addMouseListener(new MouseAdapter() {
-                @Override public void mouseEntered(MouseEvent e) { hovered = true; repaint(); }
+                @Override public void mouseEntered(MouseEvent e) { hovered = true;  repaint(); }
                 @Override public void mouseExited(MouseEvent e)  { hovered = false; repaint(); }
             });
         }
 
-        /** @param c border color to use */
+        /** @param c border color */
         public void setBorderColor(Color c) { this.borderColor = c; }
 
-        @Override
-        protected void paintComponent(Graphics g) {
+        @Override protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            Color drawBg = hovered ? bg.darker() : bg;
-            g2.setColor(drawBg);
+            g2.setColor(hovered ? bg.darker() : bg);
             g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 6, 6));
             g2.setColor(borderColor);
             g2.setStroke(new BasicStroke(1.5f));
-            g2.draw(new RoundRectangle2D.Float(0.75f, 0.75f, getWidth()-1.5f, getHeight()-1.5f, 6, 6));
+            g2.draw(new RoundRectangle2D.Float(0.75f, 0.75f, getWidth() - 1.5f, getHeight() - 1.5f, 6, 6));
             g2.dispose();
             super.paintComponent(g);
         }

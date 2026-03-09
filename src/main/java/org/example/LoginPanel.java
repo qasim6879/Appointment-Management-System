@@ -4,23 +4,23 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.RoundRectangle2D;
 
 /**
  * Login screen for AppointEase.
  * Split layout: left branding panel + right form panel.
- * Detects role (User / Administrator) via toggle before login.
+ * Role (User / Administrator) is selected via a toggle before signing in.
+ * Any non-empty credentials are accepted — wire real auth to your service layer.
  *
  * @author AppointEase
  * @version 1.0
  */
 public class LoginPanel extends JPanel {
 
-    /** Callback interface for when login succeeds. */
+    /** Callback fired when the user successfully signs in. */
     public interface LoginListener {
         /**
          * @param username the entered username
-         * @param isAdmin  true if Administrator role was selected
+         * @param isAdmin  true if the Administrator toggle was selected
          */
         void onLogin(String username, boolean isAdmin);
     }
@@ -33,7 +33,7 @@ public class LoginPanel extends JPanel {
     private final LoginListener listener;
 
     /**
-     * @param listener called when login button is clicked with valid input
+     * @param listener called when login succeeds
      */
     public LoginPanel(LoginListener listener) {
         this.listener = listener;
@@ -49,7 +49,6 @@ public class LoginPanel extends JPanel {
         JPanel p = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // decorative circles
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(255, 255, 255, 12));
@@ -62,22 +61,23 @@ public class LoginPanel extends JPanel {
         p.setLayout(new BorderLayout());
         p.setBorder(BorderFactory.createEmptyBorder(48, 48, 48, 48));
 
-        // Brand name
         JPanel top = new JPanel();
         top.setOpaque(false);
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
-        JLabel brand = new JLabel("<html><span style='color:#f5f0e8'>Appoint</span>"
-                + "<span style='color:#c84b2f'><i>Ease.</i></span></html>");
+        JLabel brand = new JLabel("<html>"
+            + "<span style='color:#f5f0e8'>Appoint</span>"
+            + "<span style='color:#c84b2f'><i>Ease.</i></span></html>");
         brand.setFont(new Font("Serif", Font.BOLD, 36));
-        JLabel tag = new JLabel("<html><span style='color:rgba(245,240,232,0.5)'>"
-                + "A structured appointment scheduling<br>system for your institution.</span></html>");
+        JLabel tag = new JLabel("<html>"
+            + "<span style='color:rgba(245,240,232,0.5)'>"
+            + "A structured appointment scheduling<br>"
+            + "system for your institution.</span></html>");
         tag.setFont(Theme.FONT_BODY);
         tag.setForeground(new Color(0xBB, 0xB4, 0xA8));
         top.add(brand);
         top.add(Box.createVerticalStrut(12));
         top.add(tag);
 
-        // Feature bullets
         JPanel features = new JPanel();
         features.setOpaque(false);
         features.setLayout(new BoxLayout(features, BoxLayout.Y_AXIS));
@@ -100,7 +100,6 @@ public class LoginPanel extends JPanel {
             features.add(row);
         }
 
-        // Footer
         JLabel footer = new JLabel("JAVA 8 · MAVEN · JUNIT 5");
         footer.setFont(Theme.FONT_LABEL);
         footer.setForeground(new Color(0x55, 0x4E, 0x44));
@@ -122,7 +121,6 @@ public class LoginPanel extends JPanel {
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
         form.setPreferredSize(new Dimension(340, 460));
 
-        // Heading
         JLabel heading = new JLabel("Sign in");
         heading.setFont(new Font("Serif", Font.BOLD, 28));
         heading.setForeground(Theme.INK);
@@ -131,7 +129,6 @@ public class LoginPanel extends JPanel {
         JLabel sub = Components.subtitle("Enter your credentials to continue.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
-        // Role toggle
         JLabel roleLabel = Components.sectionLabel("I am a:");
         roleLabel.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -139,10 +136,10 @@ public class LoginPanel extends JPanel {
         userToggle  = roleToggleBtn("👤  User");
         adminToggle = roleToggleBtn("🔧  Administrator");
         userToggle.setSelected(true);
-        styleRoleBtn(userToggle, true);
+        styleRoleBtn(userToggle,  true);
+        styleRoleBtn(adminToggle, false);
         roleGroup.add(userToggle);
         roleGroup.add(adminToggle);
-
         userToggle.addActionListener(e -> {
             styleRoleBtn(userToggle, true);
             styleRoleBtn(adminToggle, false);
@@ -156,26 +153,23 @@ public class LoginPanel extends JPanel {
         roleRow.setOpaque(false);
         roleRow.setBorder(new LineBorder(Theme.BORDER, 1, true));
         roleRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        roleRow.setAlignmentX(LEFT_ALIGNMENT);
         roleRow.add(userToggle);
         roleRow.add(adminToggle);
-        roleRow.setAlignmentX(LEFT_ALIGNMENT);
 
-        // Username
         JLabel unLabel = Components.sectionLabel("Username");
         unLabel.setAlignmentX(LEFT_ALIGNMENT);
         usernameField = Components.textField("e.g. j.doe");
         usernameField.setAlignmentX(LEFT_ALIGNMENT);
         usernameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Password
         JLabel pwLabel = Components.sectionLabel("Password");
         pwLabel.setAlignmentX(LEFT_ALIGNMENT);
         passwordField = Components.passwordField();
         passwordField.setAlignmentX(LEFT_ALIGNMENT);
         passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Error label (hidden by default)
-        errorLabel = new JLabel("⚠  Invalid username or password. Try again.");
+        errorLabel = new JLabel("⚠  Please enter both username and password.");
         errorLabel.setFont(Theme.FONT_SMALL);
         errorLabel.setForeground(Theme.ACCENT);
         errorLabel.setBackground(new Color(0xFD, 0xF3, 0xF1));
@@ -188,21 +182,16 @@ public class LoginPanel extends JPanel {
         errorLabel.setAlignmentX(LEFT_ALIGNMENT);
         errorLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
 
-        // Sign in button
         JButton signIn = Components.primaryBtn("Sign In  →");
         signIn.setAlignmentX(LEFT_ALIGNMENT);
         signIn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         signIn.addActionListener(e -> handleLogin());
-
-        // Allow Enter key
-        passwordField.addActionListener(e -> handleLogin());
         usernameField.addActionListener(e -> handleLogin());
+        passwordField.addActionListener(e -> handleLogin());
 
-        // Note
         JLabel note = Components.subtitle("Session ends securely on logout.");
         note.setAlignmentX(LEFT_ALIGNMENT);
 
-        // Assemble form
         form.add(heading);
         form.add(Box.createVerticalStrut(4));
         form.add(sub);
@@ -242,44 +231,24 @@ public class LoginPanel extends JPanel {
     }
 
     private void styleRoleBtn(JToggleButton b, boolean selected) {
-        if (selected) {
-            b.setBackground(Theme.INK);
-            b.setForeground(Theme.PAPER);
-        } else {
-            b.setBackground(Theme.PAPER);
-            b.setForeground(Theme.MUTED);
-        }
+        b.setBackground(selected ? Theme.INK   : Theme.PAPER);
+        b.setForeground(selected ? Theme.PAPER : Theme.MUTED);
     }
 
     /**
-     * Validates input and fires the LoginListener.
-     * Demo credentials: admin/admin → admin, anything else → user.
-     * Empty fields show error.
+     * Validates that both fields are non-empty, then fires the LoginListener.
+     * Role is determined by whichever toggle is selected.
+     * Replace with real AuthService logic in your service layer.
      */
     private void handleLogin() {
         String user = usernameField.getText().trim();
         String pass = new String(passwordField.getPassword()).trim();
-
         if (user.isEmpty() || pass.isEmpty()) {
-            showError(true);
+            errorLabel.setVisible(true);
+            revalidate(); repaint();
             return;
         }
-
-        // Demo logic — replace with real auth in your service layer
-        boolean isAdmin = adminToggle.isSelected() && user.equals("admin") && pass.equals("admin");
-        boolean validUser = userToggle.isSelected() && !user.isEmpty() && !pass.isEmpty();
-
-        if (isAdmin || validUser) {
-            showError(false);
-            listener.onLogin(user, isAdmin);
-        } else {
-            showError(true);
-        }
-    }
-
-    private void showError(boolean show) {
-        errorLabel.setVisible(show);
-        revalidate();
-        repaint();
+        errorLabel.setVisible(false);
+        listener.onLogin(user, adminToggle.isSelected());
     }
 }

@@ -23,10 +23,10 @@ public final class Theme {
     public static final Color SIDEBAR_BG = new Color(0x14, 0x11, 0x0D);
 
     // ── Semantic Colors ───────────────────────────────────────
-    public static final Color ACCENT     = new Color(0xC8, 0x4B, 0x2F);  // red/CTA
-    public static final Color ACCENT2    = new Color(0x2F, 0x6F, 0xC8);  // blue/virtual
-    public static final Color SUCCESS    = new Color(0x2A, 0x7A, 0x4B);  // green/confirmed
-    public static final Color WARNING    = new Color(0xC8, 0x7D, 0x2F);  // orange/pending
+    public static final Color ACCENT     = new Color(0xC8, 0x4B, 0x2F);
+    public static final Color ACCENT2    = new Color(0x2F, 0x6F, 0xC8);
+    public static final Color SUCCESS    = new Color(0x2A, 0x7A, 0x4B);
+    public static final Color WARNING    = new Color(0xC8, 0x7D, 0x2F);
     public static final Color WHITE      = Color.WHITE;
 
     // Tag background tints
@@ -38,12 +38,22 @@ public final class Theme {
     public static final Color TAG_GROUP_FG     = new Color(0x6B, 0x3F, 0xC8);
 
     // ── Typography ────────────────────────────────────────────
+    // Display / page titles — Serif for warmth
     public static final Font FONT_TITLE  = new Font("Serif",     Font.BOLD,  26);
     public static final Font FONT_HEAD   = new Font("Serif",     Font.BOLD,  18);
+
+    // Body text
     public static final Font FONT_BODY   = new Font("SansSerif", Font.PLAIN, 13);
-    public static final Font FONT_SMALL  = new Font("Monospaced",Font.PLAIN, 11);
-    public static final Font FONT_LABEL  = new Font("Monospaced",Font.BOLD,  10);
-    public static final Font FONT_BUTTON = new Font("Monospaced",Font.BOLD,  11);
+
+    // Small labels, card headers, table column headers, status tags
+    // Previously Monospaced — now SansSerif for a cleaner, modern look
+    public static final Font FONT_LABEL  = new Font("SansSerif", Font.BOLD,  11);
+
+    // Timestamps, hints, footnotes
+    public static final Font FONT_SMALL  = new Font("SansSerif", Font.PLAIN, 11);
+
+    // Buttons and interactive controls
+    public static final Font FONT_BUTTON = new Font("SansSerif", Font.BOLD,  12);
 
     // ── Spacing ───────────────────────────────────────────────
     public static final int PAD_LG = 24;
