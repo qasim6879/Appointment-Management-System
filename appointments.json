@@ -1,0 +1,12 @@
+[
+  {
+    "id": "AP-001",
+    "date": "2026-03-10",
+    "startTime": "10:00:00",
+    "duration": 45,
+    "type": "IN_PERSON",
+    "participantCount": 0,
+    "status": "AVAILABLE",
+    "appointments": []
+  }
+]

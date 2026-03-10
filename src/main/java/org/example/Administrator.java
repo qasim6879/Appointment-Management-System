@@ -14,4 +14,8 @@ public String getAdminID() {
 public void setAdminID(String adminID) {
 	this.adminID = adminID;
 }
+public Administrator() {}
+
+
+
 }

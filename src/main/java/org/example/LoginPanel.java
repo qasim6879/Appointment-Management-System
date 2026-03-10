@@ -4,15 +4,16 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 /**
  * Login screen for AppointEase.
  * Split layout: left branding panel + right form panel.
  * Role (User / Administrator) is selected via a toggle before signing in.
- * Any non-empty credentials are accepted — wire real auth to your service layer.
+ * Validates against JSON database.
  *
  * @author AppointEase
- * @version 1.0
+ * @version 1.1
  */
 public class LoginPanel extends JPanel {
 
@@ -25,11 +26,11 @@ public class LoginPanel extends JPanel {
         void onLogin(String username, boolean isAdmin);
     }
 
-    private JTextField     usernameField;
+    private JTextField      usernameField;
     private JPasswordField passwordField;
     private JToggleButton  userToggle;
     private JToggleButton  adminToggle;
-    private JLabel         errorLabel;
+    private JLabel          errorLabel;
     private final LoginListener listener;
 
     /**
@@ -41,6 +42,38 @@ public class LoginPanel extends JPanel {
         setBackground(Theme.INK);
         add(buildLeft());
         add(buildRight());
+
+        // إعداد منطق إخفاء النص التوضيحي (Placeholder) تلقائياً
+        setupFocusLogic();
+    }
+
+    private void setupFocusLogic() {
+        usernameField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                // إزالة النص التوضيحي عند بدء الكتابة
+                if (usernameField.getText().equals("e.g. j.doe")) {
+                    usernameField.setText("");
+                    usernameField.setForeground(Theme.INK);
+                }
+                errorLabel.setVisible(false); // إخفاء النص الدموي عند محاولة التصحيح
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                // إعادة النص التوضيحي إذا ترك الحقل فارغاً
+                if (usernameField.getText().isEmpty()) {
+                    usernameField.setText("e.g. j.doe");
+                    usernameField.setForeground(Theme.MUTED);
+                }
+            }
+        });
+
+        passwordField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                errorLabel.setVisible(false);
+            }
+        });
     }
 
     // ── Left: Branding ────────────────────────────────────────
@@ -169,6 +202,7 @@ public class LoginPanel extends JPanel {
         passwordField.setAlignmentX(LEFT_ALIGNMENT);
         passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
+        // إعداد النص الدموي (errorLabel)
         errorLabel = new JLabel("⚠  Please enter both username and password.");
         errorLabel.setFont(Theme.FONT_SMALL);
         errorLabel.setForeground(Theme.ACCENT);
@@ -185,6 +219,8 @@ public class LoginPanel extends JPanel {
         JButton signIn = Components.primaryBtn("Sign In  →");
         signIn.setAlignmentX(LEFT_ALIGNMENT);
         signIn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        
+        // ربط زر الدخول بالمنطق البرمجي
         signIn.addActionListener(e -> handleLogin());
         usernameField.addActionListener(e -> handleLogin());
         passwordField.addActionListener(e -> handleLogin());
@@ -235,20 +271,67 @@ public class LoginPanel extends JPanel {
         b.setForeground(selected ? Theme.PAPER : Theme.MUTED);
     }
 
+    private void showError(String msg) {
+        errorLabel.setText("⚠  " + msg);
+        errorLabel.setVisible(true);
+        revalidate();
+        repaint();
+    }
+
     /**
-     * Validates that both fields are non-empty, then fires the LoginListener.
-     * Role is determined by whichever toggle is selected.
-     * Replace with real AuthService logic in your service layer.
+     * منطق تسجيل الدخول المربوط بملفات JSON
      */
     private void handleLogin() {
         String user = usernameField.getText().trim();
         String pass = new String(passwordField.getPassword()).trim();
-        if (user.isEmpty() || pass.isEmpty()) {
-            errorLabel.setVisible(true);
-            revalidate(); repaint();
+        boolean isAdmin = adminToggle.isSelected();
+
+        // فحص الحقول الفارغة
+        if (user.isEmpty() || pass.isEmpty() || user.equals("e.g. j.doe")) {
+            showError("Please enter both username and password.");
             return;
         }
-        errorLabel.setVisible(false);
-        listener.onLogin(user, adminToggle.isSelected());
+
+        try {
+            if (isAdmin) {
+                // منطق المسؤول: بحث فقط في ملف admins.json
+                List<Administrator> admins = JsonHandler.loadList("admins.json", Administrator.class);
+                Administrator found = admins.stream()
+                        .filter(a -> a.getEmail().equalsIgnoreCase(user))
+                        .findFirst().orElse(null);
+
+                if (found != null) {
+                    if (found.getPassword().equals(pass)) {
+                        listener.onLogin(user, true);
+                    } else {
+                        showError("Incorrect password for Administrator!");
+                    }
+                } else {
+                    showError("Administrator account not found.");
+                }
+            } else {
+                // منطق المستخدم: بحث في ملف users.json
+                List<User> users = JsonHandler.loadList("users.json", User.class);
+                User found = users.stream()
+                        .filter(u -> u.getEmail().equalsIgnoreCase(user))
+                        .findFirst().orElse(null);
+
+                if (found != null) {
+                    if (found.getPassword().equals(pass)) {
+                        listener.onLogin(user, false);
+                    } else {
+                        showError("Wrong password for this user!");
+                    }
+                } else {
+                    // مستخدم جديد: يتم إنشاؤه وحفظه تلقائياً
+                    users.add(new User(user, pass));
+                    JsonHandler.saveList(users, "users.json");
+                    listener.onLogin(user, false);
+                }
+            }
+        } catch (Exception ex) {
+            showError("System error: Unable to load database.");
+            ex.printStackTrace();
+        }
     }
 }

@@ -54,6 +54,6 @@ import java.util.List;
 	        return appointments;
 	    }
 	    
-	    
+	    public Appointment() {}
 	}
 

@@ -1,0 +1,13 @@
+[
+  {
+    "adminID": "Qasem Admin",
+    "email": "admin@appoint.com",
+    "password": "12345"
+  },
+  {
+	"adminID": "admin",
+    "email": "admin",
+    "password": "0000"
+	
+  }
+]

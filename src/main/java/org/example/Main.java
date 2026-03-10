@@ -1,23 +1,17 @@
 package org.example;
+
 // qasem was here
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Main entry point for the AppointEase Swing UI.
- * Manages the top-level JFrame and switches between screens
- * (Login → User Dashboard / Admin Dashboard → Login) via CardLayout.
- *
- * Run via Maven:
- *   mvn compile
- *   mvn exec:java -Dexec.mainClass="ui.Main"
- *
- * Or compile and run directly:
- *   javac -d out src/main/java/ui/*.java
- *   java -cp out ui.Main
- *
- * @author AppointEase
- * @version 1.0
+ * Manages the top-level JFrame and switches between screens.
  */
 public class Main {
 
@@ -33,6 +27,10 @@ public class Main {
      * Initialises and displays the main application window.
      */
     public void start() {
+        // --- [خطوة الربط] التأكد من وجود بيانات JSON قبل تشغيل الواجهة ---
+        initializeSystemData(); 
+        // -----------------------------------------------------------
+
         // Cross-platform L&F as base, then override with our theme tokens
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -70,8 +68,48 @@ public class Main {
     }
 
     /**
+     * ميثود فحص وإنشاء ملفات الـ JSON إذا لم تكن موجودة.
+     * تضمن وجود مستخدم (User) ومسؤول (Admin) وموعد (Appointment) تجريبي.
+     */
+    private void initializeSystemData() {
+        // 1. فحص ملف المسؤولين (Administrators)
+        // بناءً على رسالة الخطأ السابقة، الكونستركتور يأخذ (Name, Email, Password)
+        File adminFile = new File("admins.json");
+        if (!adminFile.exists()) {
+            List<Administrator> admins = new ArrayList<>();
+            admins.add(new Administrator("Qasem Admin", "admin@appoint.com", "12345"));
+            JsonHandler.saveList(admins, "admins.json");
+        }
+
+        // 2. فحص ملف المستخدمين (Users)
+        // بناءً على رسالتك، الكونستركتور مرتب وصحيح (Email, Password غالباً أو الاسم أولاً)
+        File userFile = new File("users.json");
+        if (!userFile.exists()) {
+            List<User> users = new ArrayList<>();
+            users.add(new User("user@test.com", "user123")); 
+            JsonHandler.saveList(users, "users.json");
+        }
+
+        // 3. فحص ملف المواعيد (مطابق تماماً لكلاس Appointment الخاص بك)
+        File appFile = new File("appointments.json");
+        if (!appFile.exists()) {
+            List<Appointment> appointments = new ArrayList<>();
+            
+            // الترتيب: (String id, LocalDate date, LocalTime startTime, int duration, AppointmentType type)
+            appointments.add(new Appointment(
+                "AP-001",                   
+                LocalDate.now(),            
+                LocalTime.of(10, 0),        
+                45,                         
+                AppointmentType.IN_PERSON   
+            ));
+            
+            JsonHandler.saveList(appointments, "appointments.json");
+        }
+    }
+
+    /**
      * Builds and shows the User Dashboard for the given username.
-     * @param username the logged-in user's name
      */
     private void showUser(String username) {
         removeCard(CARD_USER);
@@ -84,7 +122,6 @@ public class Main {
 
     /**
      * Builds and shows the Admin Dashboard for the given admin name.
-     * @param adminName the logged-in admin's name
      */
     private void showAdmin(String adminName) {
         removeCard(CARD_ADMIN);
@@ -96,7 +133,7 @@ public class Main {
         frame.revalidate();
     }
 
-    /** Removes a card by name if it already exists, to avoid stale panels. */
+    /** Removes a card by name if it already exists. */
     private void removeCard(String name) {
         for (Component c : cardPanel.getComponents()) {
             if (name.equals(c.getName())) {
@@ -113,7 +150,6 @@ public class Main {
 
     /**
      * Application entry point.
-     * @param args command-line arguments (unused)
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Main().start());
