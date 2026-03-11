@@ -153,5 +153,9 @@ public class Main {
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Main().start());
+    
+       // List<Notification> list = new ArrayList<>();
+        //list.add(new Notification("your appointment tommorrow at 9 am", true)); 
+        //JsonHandler.saveList(list, "notifications.json");
     }
 }

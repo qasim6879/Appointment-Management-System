@@ -6,36 +6,21 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 
-/**
- * Login screen for AppointEase.
- * Split layout: left branding panel + right form panel.
- * Role (User / Administrator) is selected via a toggle before signing in.
- * Validates against JSON database.
- *
- * @author AppointEase
- * @version 1.1
- */
 public class LoginPanel extends JPanel {
 
-    /** Callback fired when the user successfully signs in. */
     public interface LoginListener {
-        /**
-         * @param username the entered username
-         * @param isAdmin  true if the Administrator toggle was selected
-         */
         void onLogin(String username, boolean isAdmin);
     }
 
-    private JTextField      usernameField;
+    private JTextField usernameField;
     private JPasswordField passwordField;
-    private JToggleButton  userToggle;
-    private JToggleButton  adminToggle;
-    private JLabel          errorLabel;
+    private JToggleButton userToggle;
+    private JToggleButton adminToggle;
+    private JLabel errorLabel;
+    private JButton signIn; // تم تعريفه هنا للتحكم بنصه ولونه
+    private boolean isSignUpMode = false; 
     private final LoginListener listener;
 
-    /**
-     * @param listener called when login succeeds
-     */
     public LoginPanel(LoginListener listener) {
         this.listener = listener;
         setLayout(new GridLayout(1, 2));
@@ -43,7 +28,6 @@ public class LoginPanel extends JPanel {
         add(buildLeft());
         add(buildRight());
 
-        // إعداد منطق إخفاء النص التوضيحي (Placeholder) تلقائياً
         setupFocusLogic();
     }
 
@@ -51,16 +35,14 @@ public class LoginPanel extends JPanel {
         usernameField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                // إزالة النص التوضيحي عند بدء الكتابة
                 if (usernameField.getText().equals("e.g. j.doe")) {
                     usernameField.setText("");
                     usernameField.setForeground(Theme.INK);
                 }
-                errorLabel.setVisible(false); // إخفاء النص الدموي عند محاولة التصحيح
+                resetToSignInMode(); // العودة للوضع الطبيعي عند محاولة التصحيح
             }
             @Override
             public void focusLost(FocusEvent e) {
-                // إعادة النص التوضيحي إذا ترك الحقل فارغاً
                 if (usernameField.getText().isEmpty()) {
                     usernameField.setText("e.g. j.doe");
                     usernameField.setForeground(Theme.MUTED);
@@ -71,12 +53,21 @@ public class LoginPanel extends JPanel {
         passwordField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                errorLabel.setVisible(false);
+                resetToSignInMode();
             }
         });
     }
 
-    // ── Left: Branding ────────────────────────────────────────
+    private void resetToSignInMode() {
+        errorLabel.setVisible(false);
+        if (isSignUpMode) {
+            isSignUpMode = false;
+            signIn.setText("Sign In  →");
+            signIn.setBackground(Theme.ACCENT); 
+        }
+    }
+
+    // ── Left: Branding (تمت استعادتها بالكامل) ────────────────────────
 
     private JPanel buildLeft() {
         JPanel p = new JPanel() {
@@ -143,7 +134,7 @@ public class LoginPanel extends JPanel {
         return p;
     }
 
-    // ── Right: Form ───────────────────────────────────────────
+    // ── Right: Form (تمت استعادتها بنفس توزيعك الأصلي) ──────────────────
 
     private JPanel buildRight() {
         JPanel outer = new JPanel(new GridBagLayout());
@@ -162,9 +153,6 @@ public class LoginPanel extends JPanel {
         JLabel sub = Components.subtitle("Enter your credentials to continue.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel roleLabel = Components.sectionLabel("I am a:");
-        roleLabel.setAlignmentX(LEFT_ALIGNMENT);
-
         ButtonGroup roleGroup = new ButtonGroup();
         userToggle  = roleToggleBtn("👤  User");
         adminToggle = roleToggleBtn("🔧  Administrator");
@@ -173,14 +161,8 @@ public class LoginPanel extends JPanel {
         styleRoleBtn(adminToggle, false);
         roleGroup.add(userToggle);
         roleGroup.add(adminToggle);
-        userToggle.addActionListener(e -> {
-            styleRoleBtn(userToggle, true);
-            styleRoleBtn(adminToggle, false);
-        });
-        adminToggle.addActionListener(e -> {
-            styleRoleBtn(adminToggle, true);
-            styleRoleBtn(userToggle, false);
-        });
+        userToggle.addActionListener(e -> { styleRoleBtn(userToggle, true); styleRoleBtn(adminToggle, false); });
+        adminToggle.addActionListener(e -> { styleRoleBtn(adminToggle, true); styleRoleBtn(userToggle, false); });
 
         JPanel roleRow = new JPanel(new GridLayout(1, 2, 0, 0));
         roleRow.setOpaque(false);
@@ -190,19 +172,14 @@ public class LoginPanel extends JPanel {
         roleRow.add(userToggle);
         roleRow.add(adminToggle);
 
-        JLabel unLabel = Components.sectionLabel("Username");
-        unLabel.setAlignmentX(LEFT_ALIGNMENT);
         usernameField = Components.textField("e.g. j.doe");
         usernameField.setAlignmentX(LEFT_ALIGNMENT);
         usernameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        JLabel pwLabel = Components.sectionLabel("Password");
-        pwLabel.setAlignmentX(LEFT_ALIGNMENT);
         passwordField = Components.passwordField();
         passwordField.setAlignmentX(LEFT_ALIGNMENT);
         passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // إعداد النص الدموي (errorLabel)
         errorLabel = new JLabel("⚠  Please enter both username and password.");
         errorLabel.setFont(Theme.FONT_SMALL);
         errorLabel.setForeground(Theme.ACCENT);
@@ -216,77 +193,40 @@ public class LoginPanel extends JPanel {
         errorLabel.setAlignmentX(LEFT_ALIGNMENT);
         errorLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
 
-        JButton signIn = Components.primaryBtn("Sign In  →");
+        signIn = Components.primaryBtn("Sign In  →");
         signIn.setAlignmentX(LEFT_ALIGNMENT);
         signIn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        
-        // ربط زر الدخول بالمنطق البرمجي
         signIn.addActionListener(e -> handleLogin());
-        usernameField.addActionListener(e -> handleLogin());
-        passwordField.addActionListener(e -> handleLogin());
-
-        JLabel note = Components.subtitle("Session ends securely on logout.");
-        note.setAlignmentX(LEFT_ALIGNMENT);
 
         form.add(heading);
         form.add(Box.createVerticalStrut(4));
         form.add(sub);
         form.add(Box.createVerticalStrut(20));
-        form.add(roleLabel);
+        form.add(Components.sectionLabel("I am a:"));
         form.add(Box.createVerticalStrut(6));
         form.add(roleRow);
         form.add(Box.createVerticalStrut(18));
-        form.add(unLabel);
+        form.add(Components.sectionLabel("Username"));
         form.add(Box.createVerticalStrut(5));
         form.add(usernameField);
         form.add(Box.createVerticalStrut(14));
-        form.add(pwLabel);
+        form.add(Components.sectionLabel("Password"));
         form.add(Box.createVerticalStrut(5));
         form.add(passwordField);
         form.add(Box.createVerticalStrut(14));
         form.add(errorLabel);
         form.add(Box.createVerticalStrut(6));
         form.add(signIn);
-        form.add(Box.createVerticalStrut(10));
-        form.add(note);
 
         outer.add(form);
         return outer;
     }
 
-    // ── Helpers ───────────────────────────────────────────────
-
-    private JToggleButton roleToggleBtn(String text) {
-        JToggleButton b = new JToggleButton(text);
-        b.setFont(Theme.FONT_BUTTON);
-        b.setFocusPainted(false);
-        b.setBorderPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setOpaque(true);
-        return b;
-    }
-
-    private void styleRoleBtn(JToggleButton b, boolean selected) {
-        b.setBackground(selected ? Theme.INK   : Theme.PAPER);
-        b.setForeground(selected ? Theme.PAPER : Theme.MUTED);
-    }
-
-    private void showError(String msg) {
-        errorLabel.setText("⚠  " + msg);
-        errorLabel.setVisible(true);
-        revalidate();
-        repaint();
-    }
-
-    /**
-     * منطق تسجيل الدخول المربوط بملفات JSON
-     */
     private void handleLogin() {
         String user = usernameField.getText().trim();
         String pass = new String(passwordField.getPassword()).trim();
         boolean isAdmin = adminToggle.isSelected();
 
-        // فحص الحقول الفارغة
         if (user.isEmpty() || pass.isEmpty() || user.equals("e.g. j.doe")) {
             showError("Please enter both username and password.");
             return;
@@ -294,27 +234,16 @@ public class LoginPanel extends JPanel {
 
         try {
             if (isAdmin) {
-                // منطق المسؤول: بحث فقط في ملف admins.json
                 List<Administrator> admins = JsonHandler.loadList("admins.json", Administrator.class);
-                Administrator found = admins.stream()
-                        .filter(a -> a.getEmail().equalsIgnoreCase(user))
-                        .findFirst().orElse(null);
-
-                if (found != null) {
-                    if (found.getPassword().equals(pass)) {
-                        listener.onLogin(user, true);
-                    } else {
-                        showError("Incorrect password for Administrator!");
-                    }
+                Administrator found = admins.stream().filter(a -> a.getEmail().equalsIgnoreCase(user)).findFirst().orElse(null);
+                if (found != null && found.getPassword().equals(pass)) {
+                    listener.onLogin(user, true);
                 } else {
-                    showError("Administrator account not found.");
+                    showError(found == null ? "Administrator account not found." : "Incorrect password!");
                 }
             } else {
-                // منطق المستخدم: بحث في ملف users.json
                 List<User> users = JsonHandler.loadList("users.json", User.class);
-                User found = users.stream()
-                        .filter(u -> u.getEmail().equalsIgnoreCase(user))
-                        .findFirst().orElse(null);
+                User found = users.stream().filter(u -> u.getEmail().equalsIgnoreCase(user)).findFirst().orElse(null);
 
                 if (found != null) {
                     if (found.getPassword().equals(pass)) {
@@ -323,15 +252,39 @@ public class LoginPanel extends JPanel {
                         showError("Wrong password for this user!");
                     }
                 } else {
-                    // مستخدم جديد: يتم إنشاؤه وحفظه تلقائياً
-                    users.add(new User(user, pass));
-                    JsonHandler.saveList(users, "users.json");
-                    listener.onLogin(user, false);
+                    if (!isSignUpMode) {
+                        showError("Account not found! Click Sign Up to create one.");
+                        signIn.setText("Sign Up  +");
+                        signIn.setBackground(new Color(0xc84b2f));
+                        isSignUpMode = true;
+                    } else {
+                        users.add(new User(user, pass));
+                        JsonHandler.saveList(users, "users.json");
+                        listener.onLogin(user, false);
+                    }
                 }
             }
         } catch (Exception ex) {
             showError("System error: Unable to load database.");
-            ex.printStackTrace();
         }
+    }
+
+    private void showError(String msg) {
+        errorLabel.setText("⚠  " + msg);
+        errorLabel.setVisible(true);
+        revalidate(); repaint();
+    }
+
+    private JToggleButton roleToggleBtn(String text) {
+        JToggleButton b = new JToggleButton(text);
+        b.setFont(Theme.FONT_BUTTON); b.setFocusPainted(false); b.setBorderPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setOpaque(true);
+        return b;
+    }
+
+    private void styleRoleBtn(JToggleButton b, boolean selected) {
+        b.setBackground(selected ? Theme.INK : Theme.PAPER);
+        b.setForeground(selected ? Theme.PAPER : Theme.MUTED);
     }
 }

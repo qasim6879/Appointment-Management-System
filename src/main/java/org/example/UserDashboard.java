@@ -176,7 +176,7 @@ public class UserDashboard extends JPanel {
         nameCol.setOpaque(false);
         JLabel nameL = new JLabel(capitalize(username));
         nameL.setFont(new Font("SansSerif", Font.BOLD, 12)); nameL.setForeground(Theme.INK);
-        JLabel roleL = new JLabel("Patient · User");
+        JLabel roleL = new JLabel(" Mr.User");
         roleL.setFont(Theme.FONT_SMALL); roleL.setForeground(Theme.MUTED);
         nameCol.add(nameL); nameCol.add(roleL);
         chip.add(avatar); chip.add(nameCol);
