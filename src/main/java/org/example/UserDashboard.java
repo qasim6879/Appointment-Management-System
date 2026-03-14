@@ -245,7 +245,18 @@ public class UserDashboard extends JPanel {
         }
 
         apptModel = new DefaultTableModel(data, cols) {
-            @Override public boolean isCellEditable(int r, int c) { return c == 6; }
+            @Override public boolean isCellEditable(int r, int c) {
+                if (c != 6) return false;
+                try {
+                    String status = (String) getValueAt(r, 5);
+                    if (status.equalsIgnoreCase("CANCELLED")) return false;
+                    LocalDateTime apptTime = LocalDateTime.of(
+                            LocalDate.parse((String) getValueAt(r, 0)),
+                            LocalTime.parse((String) getValueAt(r, 2))
+                    );
+                    return apptTime.isAfter(LocalDateTime.now());
+                } catch (Exception e) { return false; }
+            }
         };
         JTable table = new JTable(apptModel);
         table.setFont(Theme.FONT_BODY);
@@ -803,8 +814,9 @@ public class UserDashboard extends JPanel {
             try {
                 String dateStr = (String) apptModel.getValueAt(row, 0);
                 String timeStr = (String) apptModel.getValueAt(row, 2);
+                String status  = (String) apptModel.getValueAt(row, 5);
                 LocalDateTime apptTime = LocalDateTime.of(LocalDate.parse(dateStr), LocalTime.parse(timeStr));
-                if (apptTime.isAfter(LocalDateTime.now()))
+                if (apptTime.isAfter(LocalDateTime.now()) && !status.equalsIgnoreCase("CANCELLED"))
                     p.add(Components.dangerBtn("Cancel"));
             } catch (Exception ignored) {}
             return p;
@@ -828,16 +840,17 @@ public class UserDashboard extends JPanel {
                                 "Cancel this appointment?\nThe slot will become available again.",
                                 "Confirm Cancellation", JOptionPane.YES_NO_OPTION);
                         if (r == JOptionPane.YES_OPTION) {
-                            // Cancel the appointment
-                            User.getUserObject(username).cancelAppointment(
-                                    User.getUserObject(username).getUserAppointments().get(row));
+                            // Cancel the appointment in the model
+                            Appointment appt = User.getUserObject(username).getUserAppointments().get(row);
+                            User.getUserObject(username).cancelAppointment(appt);
 
-                            JOptionPane.showMessageDialog(t, "Appointment cancelled. Slot is now free.");
+                            stopCellEditing();                  // stop editing first
 
-                            stopCellEditing();               // stop editing first
-                            refreshAppointmentsTable();      // refresh table model
-                            // repaint only the Actions cell of this row
-                            t.repaint(t.getCellRect(row, 6, false));
+                            // Tell the table to redraw just this cell
+                            apptModel.fireTableCellUpdated(row, 6);
+
+                            // Optional: refresh entire table if needed
+                            refreshAppointmentsTable();
                         } else {
                             stopCellEditing();
                         }
