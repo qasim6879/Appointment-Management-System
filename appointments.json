@@ -1,12 +1,20 @@
 [
   {
-    "id": "AP-001",
-    "date": "2026-03-10",
-    "startTime": "10:00:00",
-    "duration": 45,
-    "type": "IN_PERSON",
-    "participantCount": 0,
-    "status": "AVAILABLE",
-    "appointments": []
+    "user": {
+      "username": "momen",
+      "email": "momen@gmail.com",
+      "password": "111"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "date": "2026-03-16",
+    "startTime": "12:00:00",
+    "duration": 60,
+    "type": "ASSESSMENT",
+    "status": "CANCELLED",
+    "maxParticipants": 3
   }
 ]

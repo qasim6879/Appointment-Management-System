@@ -46,10 +46,10 @@ public class JsonHandler {
     public static <T> void saveList(List<T> list, String fileName) {
         try (Writer writer = new FileWriter(fileName)) {
             gson.toJson(list, writer);
-            JOptionPane.showMessageDialog(null, 
+            /*JOptionPane.showMessageDialog(null,
                     "System: Data saved successfully to " + fileName, 
                     "Data Sync", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.INFORMATION_MESSAGE);*/
         } catch (IOException e) {
             e.printStackTrace();
         }

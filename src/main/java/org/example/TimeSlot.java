@@ -3,12 +3,12 @@ import java.time.*;
 public class TimeSlot {
     private LocalDate date;
     private LocalTime startTime;
-    private LocalTime endTime;
+    private LocalTime duration;
     
-    public TimeSlot(LocalDate date, LocalTime startTime, LocalTime endTime) {
+    public TimeSlot(LocalDate date, LocalTime startTime, LocalTime duration) {
 		this.date = date;
 		this.startTime = startTime;
-		this.endTime = endTime;
+		this.duration = duration;
 	}
     
     public LocalDate getDate() {
@@ -17,8 +17,5 @@ public class TimeSlot {
     public LocalTime getStartTime() {
     			return startTime;
     }
-    public LocalTime getEndTime() {
-				return endTime;
-	}
-    
+    public LocalTime getEndTime() { return duration; }
 }

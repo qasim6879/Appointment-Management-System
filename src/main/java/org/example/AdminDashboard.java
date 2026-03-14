@@ -60,12 +60,12 @@ public class AdminDashboard extends JPanel {
 
     // Demo data — replace with real persistence layer
     private final Object[][] allData = {
-        {"#001", "Jana Doe",          "In-person",  "Mar 14 · 10:00", "30 min", "1", "Confirmed"},
-        {"#002", "Omar Khalil",        "Urgent",     "Mar 14 · 11:00", "30 min", "1", "Urgent"   },
-        {"#003", "Lina Nasser",        "Virtual",    "Mar 15 · 14:00", "60 min", "1", "Pending"  },
-        {"#004", "Group – Assessment", "Group",      "Mar 22 · 09:00", "30 min", "4", "Pending"  },
-        {"#005", "Karim Saleh",        "Follow-up",  "Mar 23 · 09:30", "30 min", "1", "Confirmed"},
-        {"#006", "Reem Haddad",        "Individual", "Mar 24 · 15:00", "60 min", "1", "Confirmed"},
+            {"#001", "Jana Doe",          "In-person",  "Mar 14 · 10:00", "30 min", "1", "Confirmed"},
+            {"#002", "Omar Khalil",        "Urgent",     "Mar 14 · 11:00", "30 min", "1", "Urgent"   },
+            {"#003", "Lina Nasser",        "Virtual",    "Mar 15 · 14:00", "60 min", "1", "Pending"  },
+            {"#004", "Group – Assessment", "Group",      "Mar 22 · 09:00", "30 min", "4", "Pending"  },
+            {"#005", "Karim Saleh",        "Follow-up",  "Mar 23 · 09:30", "30 min", "1", "Confirmed"},
+            {"#006", "Reem Haddad",        "Individual", "Mar 24 · 15:00", "60 min", "1", "Confirmed"},
     };
 
     /**
@@ -178,8 +178,8 @@ public class AdminDashboard extends JPanel {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(Theme.PAPER);
         bar.setBorder(BorderFactory.createCompoundBorder(
-            new MatteBorder(0, 0, 1, 0, Theme.BORDER),
-            BorderFactory.createEmptyBorder(14, 24, 14, 24)
+                new MatteBorder(0, 0, 1, 0, Theme.BORDER),
+                BorderFactory.createEmptyBorder(14, 24, 14, 24)
         ));
 
         JPanel left = new JPanel(new GridLayout(2, 1, 0, 2));
@@ -226,7 +226,10 @@ public class AdminDashboard extends JPanel {
     }
 
     private JScrollPane wrapScrollable(JPanel content) {
-        JScrollPane sp = new JScrollPane(content);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(Theme.PAPER);
+        wrapper.add(content, BorderLayout.NORTH);
+        JScrollPane sp = new JScrollPane(wrapper);
         sp.setBorder(null);
         sp.getVerticalScrollBar().setUnitIncrement(16);
         sp.setBackground(Theme.PAPER);
@@ -276,8 +279,8 @@ public class AdminDashboard extends JPanel {
         JPanel searchRow = new JPanel(new BorderLayout(8, 0));
         searchRow.setBackground(Theme.CARD);
         searchRow.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(Theme.BORDER, 1, true),
-            BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                new LineBorder(Theme.BORDER, 1, true),
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         JLabel searchIcon = new JLabel("🔍");
         searchField = new JTextField("Search by user, date, type, status…");
@@ -381,13 +384,13 @@ public class AdminDashboard extends JPanel {
 
         // User
         card.add(mkFormRow("USER / PATIENT NAME",
-            addUserField = Components.textField("e.g. Jana Doe")));
+                addUserField = Components.textField("e.g. Jana Doe")));
         card.add(Box.createVerticalStrut(14));
 
         // Type
         addTypeBox = Components.comboBox(new String[]{
-            "— Appointment Type —", "Urgent", "Follow-up", "Assessment",
-            "Virtual", "In-person", "Individual", "Group"
+                "— Appointment Type —", "Urgent", "Follow-up", "Assessment",
+                "Virtual", "In-person", "Individual", "Group"
         });
         card.add(mkFormRow("APPOINTMENT TYPE", addTypeBox));
         card.add(Box.createVerticalStrut(14));
@@ -395,19 +398,19 @@ public class AdminDashboard extends JPanel {
         // Date + Time
         addDateField = Components.textField("e.g. Mar 14");
         addTimeBox   = Components.comboBox(new String[]{
-            "— Time Slot —",
-            "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-            "13:00", "13:30", "14:00", "14:30", "15:00", "15:30"
+                "— Time Slot —",
+                "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+                "13:00", "13:30", "14:00", "14:30", "15:00", "15:30"
         });
         card.add(mkFormRowTwo("DATE", addDateField, "TIME SLOT", addTimeBox));
         card.add(Box.createVerticalStrut(14));
 
         // Duration + Participants
         addDurationBox = Components.comboBox(new String[]{
-            "— Duration —", "30 min (½ hr)", "60 min (1 hr)"
+                "— Duration —", "30 min (½ hr)", "60 min (1 hr)"
         });
         addParticipantsBox = Components.comboBox(new String[]{
-            "— Participants —", "1", "2", "3", "4 (max)"
+                "— Participants —", "1", "2", "3", "4 (max)"
         });
         card.add(mkFormRowTwo("DURATION", addDurationBox, "PARTICIPANTS", addParticipantsBox));
         card.add(Box.createVerticalStrut(14));
@@ -437,8 +440,8 @@ public class AdminDashboard extends JPanel {
         addNotesArea.setLineWrap(true);
         addNotesArea.setWrapStyleWord(true);
         addNotesArea.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(Theme.BORDER, 1, true),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)
+                new LineBorder(Theme.BORDER, 1, true),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
         ));
         JScrollPane notesSp = new JScrollPane(addNotesArea);
         notesSp.setBorder(null);
@@ -479,19 +482,19 @@ public class AdminDashboard extends JPanel {
         if (user.isEmpty() || type.startsWith("—") || date.isEmpty()
                 || time.startsWith("—") || dur.startsWith("—") || part.startsWith("—")) {
             JOptionPane.showMessageDialog(this,
-                "Please fill in all required fields before confirming.",
-                "Incomplete Form", JOptionPane.WARNING_MESSAGE);
+                    "Please fill in all required fields before confirming.",
+                    "Incomplete Form", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         JOptionPane.showMessageDialog(this,
-            "Appointment booked successfully!\n\n"
-            + "User:         " + user + "\n"
-            + "Type:         " + type + "\n"
-            + "Date:         " + date + "  " + time + "\n"
-            + "Duration:     " + dur  + "\n"
-            + "Participants: " + part,
-            "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
+                "Appointment booked successfully!\n\n"
+                        + "User:         " + user + "\n"
+                        + "Type:         " + type + "\n"
+                        + "Date:         " + date + "  " + time + "\n"
+                        + "Duration:     " + dur  + "\n"
+                        + "Participants: " + part,
+                "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
 
         resetAddForm();
         switchTo(CARD_RESERVATIONS);
@@ -547,20 +550,20 @@ public class AdminDashboard extends JPanel {
         list.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         list.add(Components.notifRow("⚠", "Capacity Warning",
-            "Group – Assessment on Mar 22 has reached max participants (4).",
-            "Today · 09:15", Theme.ACCENT));
+                "Group – Assessment on Mar 22 has reached max participants (4).",
+                "Today · 09:15", Theme.ACCENT));
         list.add(Box.createVerticalStrut(8));
         list.add(Components.notifRow("✅", "Booking Confirmed",
-            "Reservation #006 for Reem Haddad was confirmed successfully.",
-            "Today · 08:40", Theme.SUCCESS));
+                "Reservation #006 for Reem Haddad was confirmed successfully.",
+                "Today · 08:40", Theme.SUCCESS));
         list.add(Box.createVerticalStrut(8));
         list.add(Components.notifRow("🔔", "Upcoming Appointments",
-            "4 appointments scheduled for tomorrow (Mar 14).",
-            "Yesterday · 17:00", Theme.WARNING));
+                "4 appointments scheduled for tomorrow (Mar 14).",
+                "Yesterday · 17:00", Theme.WARNING));
         list.add(Box.createVerticalStrut(8));
         list.add(Components.notifRow("ℹ", "Slot Freed",
-            "Reservation #003 was cancelled by user. Slot Mar 15 · 14:00 is now free.",
-            "Yesterday · 13:22", Theme.ACCENT2));
+                "Reservation #003 was cancelled by user. Slot Mar 15 · 14:00 is now free.",
+                "Yesterday · 13:22", Theme.ACCENT2));
 
         view.add(list);
         view.add(Box.createVerticalStrut(24));
@@ -592,6 +595,7 @@ public class AdminDashboard extends JPanel {
 
         JPanel stats = new JPanel(new GridLayout(1, 3, 12, 0));
         stats.setOpaque(false);
+        stats.setAlignmentX(LEFT_ALIGNMENT);
         stats.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
         stats.add(Components.statCard("42",  "Total appointments this month", Theme.ACCENT2));
         stats.add(Components.statCard("87%", "Confirmed rate",                Theme.SUCCESS));
@@ -601,6 +605,7 @@ public class AdminDashboard extends JPanel {
 
         JPanel card = Components.card();
         card.setLayout(new BorderLayout(0, 12));
+        card.setAlignmentX(LEFT_ALIGNMENT);
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
 
         JLabel cardTitle = new JLabel("DETAILED REPORTS");
@@ -609,13 +614,13 @@ public class AdminDashboard extends JPanel {
         card.add(cardTitle, BorderLayout.NORTH);
 
         JLabel placeholder = new JLabel(
-            "<html><div style='text-align:center;padding:40px'>"
-            + "<div style='font-size:32px'>📊</div><br><br>"
-            + "<b>Coming soon</b><br><br>"
-            + "Charts, export options, and detailed breakdowns<br>"
-            + "by appointment type, user, and time period<br>"
-            + "will be designed after project completion."
-            + "</div></html>"
+                "<html><div style='text-align:center;padding:40px'>"
+                        + "<div style='font-size:32px'>📊</div><br><br>"
+                        + "<b>Coming soon</b><br><br>"
+                        + "Charts, export options, and detailed breakdowns<br>"
+                        + "by appointment type, user, and time period<br>"
+                        + "will be designed after project completion."
+                        + "</div></html>"
         );
         placeholder.setHorizontalAlignment(SwingConstants.CENTER);
         placeholder.setFont(Theme.FONT_BODY);
@@ -702,8 +707,8 @@ public class AdminDashboard extends JPanel {
         b.setContentAreaFilled(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(Theme.BORDER, 1, true),
-            BorderFactory.createEmptyBorder(4, 12, 4, 12)
+                new LineBorder(Theme.BORDER, 1, true),
+                BorderFactory.createEmptyBorder(4, 12, 4, 12)
         ));
         b.setForeground(Theme.MUTED);
         return b;
@@ -725,7 +730,7 @@ public class AdminDashboard extends JPanel {
 
     private static class StatusRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                boolean sel, boolean focus, int row, int col) {
+                                                                 boolean sel, boolean focus, int row, int col) {
             String val = v == null ? "" : v.toString();
             JLabel tag;
             switch (val) {
@@ -743,7 +748,7 @@ public class AdminDashboard extends JPanel {
 
     private static class TypeRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                boolean sel, boolean focus, int row, int col) {
+                                                                 boolean sel, boolean focus, int row, int col) {
             String val = v == null ? "" : v.toString();
             JLabel tag;
             switch (val) {
@@ -762,8 +767,8 @@ public class AdminDashboard extends JPanel {
 
     private static class AdminActionRenderer implements TableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                boolean sel, boolean focus, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
+                                                                 boolean sel, boolean focus, int row, int col) {
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
             p.setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
             p.add(Components.outlineBtn("Edit"));
             p.add(Components.dangerBtn("Cancel"));
@@ -775,21 +780,21 @@ public class AdminDashboard extends JPanel {
         public AdminActionEditor(JCheckBox c) { super(c); }
 
         @Override public Component getTableCellEditorComponent(JTable t, Object v,
-                boolean sel, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
+                                                               boolean sel, int row, int col) {
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
             p.setBackground(Theme.CREAM);
             JButton edit = Components.outlineBtn("Edit");
             JButton can  = Components.dangerBtn("Cancel");
             String user  = tableModel.getValueAt(row, 1).toString();
             edit.addActionListener(e -> {
                 JOptionPane.showMessageDialog(t,
-                    "Edit dialog for " + user + " — connect to your AppointmentService.");
+                        "Edit dialog for " + user + " — connect to your AppointmentService.");
                 stopCellEditing();
             });
             can.addActionListener(e -> {
                 int r = JOptionPane.showConfirmDialog(t,
-                    "Cancel reservation for " + user + "?\nSlot will become available again.",
-                    "Admin Cancel", JOptionPane.YES_NO_OPTION);
+                        "Cancel reservation for " + user + "?\nSlot will become available again.",
+                        "Admin Cancel", JOptionPane.YES_NO_OPTION);
                 if (r == JOptionPane.YES_OPTION) {
                     tableModel.removeRow(row);
                     JOptionPane.showMessageDialog(t, "Reservation cancelled. Slot freed.");

@@ -5,23 +5,13 @@ import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.*;
 
-/**
- * User Dashboard panel for AppointEase.
- * Sidebar navigates between three views via CardLayout:
- *   - My Appointments  (default)
- *   - Book Appointment (slots picker + booking form)
- *   - Notifications    (reminder / confirmation feed)
- * Only "Log out" is always visible at the bottom of the sidebar.
- *
- * @author AppointEase
- * @version 1.0
- */
 public class UserDashboard extends JPanel {
 
-    /** Callback for logout action. */
     public interface LogoutListener {
-        /** Called when user clicks Log Out. */
         void onLogout();
     }
 
@@ -38,23 +28,26 @@ public class UserDashboard extends JPanel {
 
     private CardLayout contentCards;
     private JPanel     contentPanel;
+    private JPanel     notifsList;
 
-    // Sidebar nav buttons kept as fields to manage active state
     private JButton btnAppts;
     private JButton btnBook;
     private JButton btnNotifs;
 
-    /**
-     * @param username       logged-in user's name
-     * @param logoutListener callback for logout
-     */
+    private DefaultTableModel   apptModel;
+    private ButtonGroup         slotGroup      = new ButtonGroup();
+    private JPanel              slotGrid       = new JPanel(new GridLayout(3, 4, 8, 8));
+    private List<JToggleButton> slotBtns       = new ArrayList<>();
+    private LocalDate           pickedDate     = null;
+    private String              pickedAdmin    = null;
+    private int                 pickedDuration = 30;
+
     public UserDashboard(String username, LogoutListener logoutListener) {
         this.username = username;
         this.logoutListener = logoutListener;
         setLayout(new BorderLayout());
         setBackground(Theme.PAPER);
 
-        // Build card panel first so sidebar buttons can reference switchTo()
         contentCards = new CardLayout();
         contentPanel = new JPanel(contentCards);
         contentPanel.setBackground(Theme.PAPER);
@@ -72,29 +65,36 @@ public class UserDashboard extends JPanel {
         JPanel side = new JPanel();
         side.setBackground(Theme.SIDEBAR_BG);
         side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
-        side.setPreferredSize(new Dimension(210, 0));
-        side.setBorder(BorderFactory.createEmptyBorder(24, 0, 24, 0));
+        side.setPreferredSize(new Dimension(220, 0));
+        side.setBorder(BorderFactory.createEmptyBorder(28, 0, 28, 0));
 
         JLabel logo = new JLabel("  AppointEase");
-        logo.setFont(new Font("Serif", Font.BOLD, 16));
+        logo.setFont(new Font("Serif", Font.BOLD, 18));
         logo.setForeground(Theme.PAPER);
-        logo.setBorder(BorderFactory.createEmptyBorder(0, 16, 20, 16));
+        logo.setBorder(BorderFactory.createEmptyBorder(0, 20, 6, 16));
         logo.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel userChip = new JLabel("  " + capitalize(username));
+        userChip.setFont(Theme.FONT_SMALL);
+        userChip.setForeground(new Color(0x88, 0x82, 0x78));
+        userChip.setBorder(BorderFactory.createEmptyBorder(0, 20, 24, 16));
+        userChip.setAlignmentX(LEFT_ALIGNMENT);
+
         side.add(logo);
+        side.add(userChip);
 
         btnAppts  = Components.sidebarItem("📅", "My Appointments");
         btnBook   = Components.sidebarItem("➕", "Book Appointment");
         btnNotifs = Components.sidebarItem("🔔", "Notifications");
 
-        btnAppts.addActionListener(e  -> switchTo(CARD_APPOINTMENTS));
+        btnAppts.addActionListener(e  -> { switchTo(CARD_APPOINTMENTS); refreshAppointmentsTable(); });
         btnBook.addActionListener(e   -> switchTo(CARD_BOOK));
-        btnNotifs.addActionListener(e -> switchTo(CARD_NOTIFS));
+        btnNotifs.addActionListener(e -> { switchTo(CARD_NOTIFS); rebuildNotifs(); });
 
         side.add(btnAppts);
         side.add(btnBook);
         side.add(btnNotifs);
 
-        // Logout pinned at bottom
         JButton logout = Components.sidebarItem("🚪", "Log out");
         logout.setForeground(Theme.ACCENT);
         logout.addActionListener(e -> logoutListener.onLogout());
@@ -104,14 +104,10 @@ public class UserDashboard extends JPanel {
         side.add(Box.createVerticalStrut(8));
         side.add(logout);
 
-        setActive(btnAppts); // default
+        setActive(btnAppts);
         return side;
     }
 
-    /**
-     * Shows the given card and updates the active sidebar highlight.
-     * @param card one of CARD_APPOINTMENTS, CARD_BOOK, CARD_NOTIFS
-     */
     private void switchTo(String card) {
         contentCards.show(contentPanel, card);
         switch (card) {
@@ -121,17 +117,15 @@ public class UserDashboard extends JPanel {
         }
     }
 
-    /** Highlights one sidebar button and resets the others. */
     private void setActive(JButton active) {
         for (JButton b : new JButton[]{btnAppts, btnBook, btnNotifs}) {
             boolean on = (b == active);
-            b.putClientProperty("active", on);
-            b.setBackground(on ? Theme.ACCENT    : Theme.SIDEBAR_BG);
-            b.setForeground(on ? Theme.WHITE     : new Color(0xBB, 0xB4, 0xA8));
+            b.setBackground(on ? Theme.ACCENT : Theme.SIDEBAR_BG);
+            b.setForeground(on ? Theme.WHITE  : new Color(0xBB, 0xB4, 0xA8));
         }
     }
 
-    // ── Outer shell: top bar + card switcher ──────────────────
+    // ── Main shell ────────────────────────────────────────────
 
     private JPanel buildMain() {
         JPanel main = new JPanel(new BorderLayout());
@@ -145,18 +139,18 @@ public class UserDashboard extends JPanel {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(Theme.PAPER);
         bar.setBorder(BorderFactory.createCompoundBorder(
-            new MatteBorder(0, 0, 1, 0, Theme.BORDER),
-            BorderFactory.createEmptyBorder(14, 24, 14, 24)
+                new MatteBorder(0, 0, 1, 0, Theme.BORDER),
+                BorderFactory.createEmptyBorder(16, 28, 16, 28)
         ));
-        JPanel left = new JPanel(new GridLayout(2, 1, 0, 2));
+        JPanel left = new JPanel(new GridLayout(2, 1, 0, 3));
         left.setOpaque(false);
         left.add(Components.sectionLabel("User Dashboard"));
         JLabel greeting = new JLabel("Good morning, " + capitalize(username) + ".");
-        greeting.setFont(new Font("Serif", Font.BOLD, 20));
+        greeting.setFont(new Font("Serif", Font.BOLD, 22));
         greeting.setForeground(Theme.INK);
         left.add(greeting);
 
-        JPanel chip = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel chip = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         chip.setOpaque(false);
         JLabel avatar = new JLabel(String.valueOf(username.charAt(0)).toUpperCase()) {
             @Override protected void paintComponent(Graphics g) {
@@ -168,15 +162,15 @@ public class UserDashboard extends JPanel {
                 super.paintComponent(g);
             }
         };
-        avatar.setPreferredSize(new Dimension(36, 36));
+        avatar.setPreferredSize(new Dimension(40, 40));
         avatar.setHorizontalAlignment(SwingConstants.CENTER);
         avatar.setForeground(Theme.WHITE);
-        avatar.setFont(new Font("Serif", Font.BOLD, 14));
+        avatar.setFont(new Font("Serif", Font.BOLD, 16));
         JPanel nameCol = new JPanel(new GridLayout(2, 1));
         nameCol.setOpaque(false);
         JLabel nameL = new JLabel(capitalize(username));
-        nameL.setFont(new Font("SansSerif", Font.BOLD, 12)); nameL.setForeground(Theme.INK);
-        JLabel roleL = new JLabel(" Mr.User");
+        nameL.setFont(new Font("SansSerif", Font.BOLD, 13)); nameL.setForeground(Theme.INK);
+        JLabel roleL = new JLabel("Patient · User");
         roleL.setFont(Theme.FONT_SMALL); roleL.setForeground(Theme.MUTED);
         nameCol.add(nameL); nameCol.add(roleL);
         chip.add(avatar); chip.add(nameCol);
@@ -187,33 +181,34 @@ public class UserDashboard extends JPanel {
     }
 
     private JScrollPane wrapScrollable(JPanel content) {
-        JScrollPane sp = new JScrollPane(content);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(Theme.PAPER);
+        wrapper.add(content, BorderLayout.NORTH);
+        JScrollPane sp = new JScrollPane(wrapper);
         sp.setBorder(null);
         sp.getVerticalScrollBar().setUnitIncrement(16);
         sp.setBackground(Theme.PAPER);
         return sp;
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 1 — MY APPOINTMENTS
-    // ══════════════════════════════════════════════════════════
+    // ── VIEW 1 — MY APPOINTMENTS ──────────────────────────────
 
     private JPanel buildAppointmentsView() {
         JPanel view = new JPanel();
         view.setBackground(Theme.PAPER);
         view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
-        view.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        view.setBorder(BorderFactory.createEmptyBorder(28, 28, 28, 28));
         view.add(buildStats());
-        view.add(Box.createVerticalStrut(20));
-        view.add(buildAppointmentsCard());
         view.add(Box.createVerticalStrut(24));
+        view.add(buildAppointmentsCard());
+        view.add(Box.createVerticalStrut(28));
         return view;
     }
 
     private JPanel buildStats() {
-        JPanel row = new JPanel(new GridLayout(1, 4, 12, 0));
+        JPanel row = new JPanel(new GridLayout(1, 4, 16, 0));
         row.setOpaque(false);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
         row.add(Components.statCard("3", "Upcoming appointments", Theme.ACCENT2));
         row.add(Components.statCard("7", "Completed",             Theme.SUCCESS));
         row.add(Components.statCard("1", "Pending confirmation",  Theme.ACCENT));
@@ -223,131 +218,297 @@ public class UserDashboard extends JPanel {
 
     private JPanel buildAppointmentsCard() {
         JPanel card = Components.card();
-        card.setLayout(new BorderLayout(0, 12));
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
+        card.setLayout(new BorderLayout(0, 14));
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel title = new JLabel("MY UPCOMING APPOINTMENTS");
         title.setFont(Theme.FONT_LABEL); title.setForeground(Theme.MUTED);
-        // "Book New" jumps straight to the Book view
         JButton addBtn = Components.primaryBtn("+ Book New");
-        addBtn.setFont(new Font("Monospaced", Font.BOLD, 10));
         addBtn.addActionListener(e -> switchTo(CARD_BOOK));
-        header.add(title, BorderLayout.WEST);
+        header.add(title,  BorderLayout.WEST);
         header.add(addBtn, BorderLayout.EAST);
         card.add(header, BorderLayout.NORTH);
 
-        String[] cols = {"Date", "Appointment", "Time", "Type", "Participants", "Status", "Actions"};
-        Object[][] data = {
-            {"Mar 14", "General Check-up",      "10:00–10:30", "In-person", "1", "Confirmed", ""},
-            {"Mar 19", "Follow-up Consultation", "14:00–14:30", "Virtual",   "1", "Virtual",   ""},
-            {"Mar 22", "Assessment Session",     "09:00–09:30", "Group",     "4", "Pending",   ""}
-        };
-        DefaultTableModel model = new DefaultTableModel(data, cols) {
+        String[] cols = {"Date", "Administrator", "Time", "Duration", "Type", "Status", "Actions"};
+        ArrayList<Appointment> appts = User.getUserObject(username).getUserAppointments();
+        Object[][] data = new Object[appts.size()][7];
+        for (int i = 0; i < appts.size(); i++) {
+            Appointment a = appts.get(i);
+            data[i][0] = a.getDate().toString();
+            data[i][1] = a.getAdmin().getUsername();
+            data[i][2] = a.getStartTime().toString();
+            data[i][3] = a.getDuration() + " min";
+            data[i][4] = a.getType().toString();
+            data[i][5] = a.getStatus().toString();
+            data[i][6] = "";
+        }
+
+        apptModel = new DefaultTableModel(data, cols) {
             @Override public boolean isCellEditable(int r, int c) { return c == 6; }
         };
-        JTable table = new JTable(model);
-        Components.styleTable(table);
+        JTable table = new JTable(apptModel);
+        table.setFont(Theme.FONT_BODY);
+        table.setRowHeight(48);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(0xE8, 0xE2, 0xD8));
+        table.setSelectionForeground(Theme.INK);
+        table.setFillsViewportHeight(true);
+        table.setBackground(Theme.CARD);
+
+        JTableHeader th = table.getTableHeader();
+        th.setFont(new Font("SansSerif", Font.BOLD, 12));
+        th.setBackground(Theme.ACCENT);
+        th.setForeground(Theme.WHITE);
+        th.setBorder(null);
+        th.setPreferredSize(new Dimension(0, 38));
+        th.setReorderingAllowed(false);
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(JTable t, Object v,
+                                                                     boolean sel, boolean focus, int row, int col) {
+                super.getTableCellRendererComponent(t, v, sel, focus, row, col);
+                setBackground(sel ? new Color(0xE8,0xE2,0xD8) : (row % 2 == 0 ? Theme.CARD : new Color(0xF2,0xEE,0xE6)));
+                setForeground(Theme.INK);
+                setBorder(BorderFactory.createEmptyBorder(0, 14, 0, 14));
+                setFont(Theme.FONT_BODY);
+                return this;
+            }
+        });
+
+        table.getColumn("Type").setCellRenderer(new TypeTagRenderer());
         table.getColumn("Status").setCellRenderer(new StatusTagRenderer());
         table.getColumn("Actions").setCellRenderer(new ActionCellRenderer());
-        table.getColumn("Actions").setCellEditor(new ActionCellEditor(new JCheckBox(), model));
-        table.getColumnModel().getColumn(0).setPreferredWidth(55);
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);
-        table.getColumnModel().getColumn(6).setPreferredWidth(150);
+        table.getColumn("Actions").setCellEditor(new ActionCellEditor(new JCheckBox()));
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(80);
+        table.getColumnModel().getColumn(1).setPreferredWidth(130);
+        table.getColumnModel().getColumn(2).setPreferredWidth(80);
+        table.getColumnModel().getColumn(3).setPreferredWidth(70);
+        table.getColumnModel().getColumn(4).setPreferredWidth(110);
+        table.getColumnModel().getColumn(5).setPreferredWidth(100);
+        table.getColumnModel().getColumn(6).setPreferredWidth(100);
 
         JScrollPane sp = new JScrollPane(table);
         sp.setBorder(new LineBorder(Theme.BORDER, 1, true));
         sp.getViewport().setBackground(Theme.CARD);
         card.add(sp, BorderLayout.CENTER);
 
-        JLabel hint = new JLabel("  ⚠  Only future appointments can be modified or cancelled.");
+        JLabel hint = new JLabel("  ⚠  Only future appointments can be cancelled.");
         hint.setFont(Theme.FONT_SMALL); hint.setForeground(Theme.MUTED);
         card.add(hint, BorderLayout.SOUTH);
         return card;
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 2 — BOOK APPOINTMENT
-    // ══════════════════════════════════════════════════════════
+    private void refreshAppointmentsTable() {
+        if (apptModel == null) return;
+        apptModel.setRowCount(0);
+        ArrayList<Appointment> appts = User.getUserObject(username).getUserAppointments();
+        for (Appointment a : appts) {
+            apptModel.addRow(new Object[]{
+                    a.getDate().toString(),
+                    a.getAdmin().getUsername(),
+                    a.getStartTime().toString(),
+                    a.getDuration() + " min",
+                    a.getType().toString(),
+                    a.getStatus().toString(),
+                    ""
+            });
+        }
+    }
+
+    // ── VIEW 2 — BOOK APPOINTMENT ─────────────────────────────
 
     private JPanel buildBookView() {
         JPanel view = new JPanel();
         view.setBackground(Theme.PAPER);
         view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
-        view.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        view.setBorder(BorderFactory.createEmptyBorder(28, 28, 28, 28));
 
         JLabel heading = new JLabel("Book an Appointment");
-        heading.setFont(new Font("Serif", Font.BOLD, 22));
+        heading.setFont(new Font("Serif", Font.BOLD, 24));
         heading.setForeground(Theme.INK);
         heading.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel sub = Components.subtitle("Pick a free slot, choose the appointment details, then confirm.");
+        JLabel sub = Components.subtitle("Select an administrator, pick a date and duration, then choose a free slot.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
         view.add(heading);
         view.add(Box.createVerticalStrut(4));
         view.add(sub);
-        view.add(Box.createVerticalStrut(20));
+        view.add(Box.createVerticalStrut(24));
 
-        JPanel row = new JPanel(new GridLayout(1, 2, 16, 0));
+        JPanel row = new JPanel(new GridLayout(1, 2, 20, 0));
         row.setOpaque(false);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 340));
+        row.setAlignmentX(LEFT_ALIGNMENT);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         row.add(buildSlotsCard());
         row.add(buildBookingFormCard());
         view.add(row);
-        view.add(Box.createVerticalStrut(24));
+        view.add(Box.createVerticalStrut(28));
         return view;
+    }
+
+    private void showDatePicker(JLabel slotHeader) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Pick a Date", true);
+        dialog.setUndecorated(true);
+        dialog.setSize(300, 320);
+        dialog.setLocationRelativeTo(this);
+
+        final LocalDate[] cursor = { LocalDate.now().withDayOfMonth(1) };
+
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setBackground(Theme.CARD);
+        root.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Theme.BORDER, 1),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setOpaque(false);
+        JLabel monthLabel = new JLabel("", SwingConstants.CENTER);
+        monthLabel.setFont(new Font("Serif", Font.BOLD, 14));
+        monthLabel.setForeground(Theme.INK);
+        JButton prev  = Components.outlineBtn("‹");
+        JButton next  = Components.outlineBtn("›");
+        JButton close = Components.dangerBtn("✕");
+        close.addActionListener(e -> dialog.dispose());
+        JPanel navRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        navRight.setOpaque(false);
+        navRight.add(next); navRight.add(close);
+        nav.add(prev, BorderLayout.WEST);
+        nav.add(monthLabel, BorderLayout.CENTER);
+        nav.add(navRight, BorderLayout.EAST);
+        root.add(nav, BorderLayout.NORTH);
+
+        JPanel grid = new JPanel(new GridLayout(0, 7, 4, 4));
+        grid.setOpaque(false);
+        for (String d : new String[]{"Su","Mo","Tu","We","Th","Fr","Sa"}) {
+            JLabel h = new JLabel(d, SwingConstants.CENTER);
+            h.setFont(Theme.FONT_LABEL);
+            h.setForeground(d.equals("Fr") || d.equals("Sa") ? Theme.MUTED : Theme.INK);
+            grid.add(h);
+        }
+        root.add(grid, BorderLayout.CENTER);
+
+        JLabel hint = new JLabel("Weekends, past or too far dates are unavailable", SwingConstants.CENTER);
+        hint.setFont(Theme.FONT_SMALL); hint.setForeground(Theme.MUTED);
+        root.add(hint, BorderLayout.SOUTH);
+
+        Runnable[] render = new Runnable[1];
+        render[0] = () -> {
+            while (grid.getComponentCount() > 7) grid.remove(grid.getComponentCount() - 1);
+            String month = cursor[0].getMonth().toString();
+            monthLabel.setText(month.charAt(0) + month.substring(1).toLowerCase() + " " + cursor[0].getYear());
+
+            int firstDow = cursor[0].withDayOfMonth(1).getDayOfWeek().getValue() % 7;
+            for (int i = 0; i < firstDow; i++) grid.add(new JLabel());
+
+            LocalDate today = LocalDate.now();
+            for (int d = 1; d <= cursor[0].lengthOfMonth(); d++) {
+                LocalDate date = cursor[0].withDayOfMonth(d);
+                DayOfWeek dow  = date.getDayOfWeek();
+                boolean unavail = dow == DayOfWeek.FRIDAY || dow == DayOfWeek.SATURDAY
+                        || !date.isAfter(today)
+                        || date.isAfter(today.plusDays(30));
+                JButton btn = new JButton(String.valueOf(d));
+                btn.setFont(Theme.FONT_SMALL);
+                btn.setFocusPainted(false);
+                btn.setEnabled(!unavail);
+                btn.setBackground(unavail ? Theme.CREAM : Theme.PAPER);
+                btn.setForeground(unavail ? Theme.MUTED : Theme.INK);
+                btn.setBorder(new LineBorder(Theme.BORDER, 1, true));
+                btn.addActionListener(e -> {
+                    String m = date.getMonth().toString();
+                    slotHeader.setText("AVAILABLE SLOTS — "
+                            + (m.charAt(0) + m.substring(1).toLowerCase().substring(0, 2))
+                            + " " + date.getDayOfMonth());
+                    pickedDate = date;
+                    refreshSlots();
+                    dialog.dispose();
+                });
+                grid.add(btn);
+            }
+            grid.revalidate(); grid.repaint();
+        };
+
+        prev.addActionListener(e -> { cursor[0] = cursor[0].minusMonths(1); render[0].run(); });
+        next.addActionListener(e -> { cursor[0] = cursor[0].plusMonths(1);  render[0].run(); });
+        render[0].run();
+
+        dialog.setContentPane(root);
+        dialog.setVisible(true);
     }
 
     private JPanel buildSlotsCard() {
         JPanel card = Components.card();
-        card.setLayout(new BorderLayout(0, 12));
+        card.setLayout(new BorderLayout(0, 16));
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        JLabel t = new JLabel("AVAILABLE SLOTS — MAR 14");
+        JLabel t = new JLabel("AVAILABLE SLOTS — pick a date");
         t.setFont(Theme.FONT_LABEL); t.setForeground(Theme.MUTED);
         JLabel ch = new JLabel("Change date ›");
         ch.setFont(Theme.FONT_SMALL); ch.setForeground(Theme.ACCENT);
         ch.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        ch.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { showDatePicker(t); }
+            @Override public void mouseEntered(MouseEvent e) { ch.setForeground(Theme.ACCENT2); }
+            @Override public void mouseExited(MouseEvent e)  { ch.setForeground(Theme.ACCENT); }
+        });
         header.add(t, BorderLayout.WEST); header.add(ch, BorderLayout.EAST);
         card.add(header, BorderLayout.NORTH);
 
-        JPanel grid = new JPanel(new GridLayout(3, 4, 6, 6));
-        grid.setOpaque(false);
-        String[]  times  = {"09:00","09:30","10:00","10:30","11:00","11:30",
-                             "13:00","13:30","14:00","14:30","15:00","15:30"};
-        boolean[] booked = { false,  false,  true,   false,  true,   true,
-                              false,  false,  false,  true,   false,  false };
-        ButtonGroup slotGroup = new ButtonGroup();
-        for (int i = 0; i < times.length; i++) {
-            final boolean bk = booked[i];
-            JToggleButton slot = new JToggleButton(times[i]);
+        String[] times = {"09:00","09:30","10:00","10:30","11:00","11:30",
+                "12:00","12:30","13:00","13:30","14:00","14:30"};
+        slotGrid.setOpaque(false);
+        slotBtns.clear();
+        for (String time : times) {
+            JToggleButton slot = new JToggleButton(time);
             slot.setFont(Theme.FONT_BUTTON);
             slot.setFocusPainted(false);
-            slot.setEnabled(!bk);
-            slot.setBackground(bk ? SLOT_BOOKED : SLOT_AVAILABLE);
-            slot.setForeground(bk ? Theme.MUTED  : Theme.INK);
+            slot.setEnabled(false);
+            slot.setBackground(SLOT_BOOKED);
+            slot.setForeground(Theme.MUTED);
             slot.setBorder(new LineBorder(Theme.BORDER, 1, true));
-            if (!bk) {
-                slot.addActionListener(e -> {
-                    slot.setBackground(slot.isSelected() ? SLOT_SELECTED : SLOT_AVAILABLE);
-                    slot.setForeground(slot.isSelected() ? Theme.WHITE    : Theme.INK);
-                });
-            }
+            slot.setPreferredSize(new Dimension(0, 52));
+            slot.addActionListener(e -> {
+                for (JToggleButton s : slotBtns)
+                    if (!s.isSelected()) { s.setBackground(SLOT_AVAILABLE); s.setForeground(Theme.INK); }
+                slot.setBackground(SLOT_SELECTED);
+                slot.setForeground(Theme.WHITE);
+            });
             slotGroup.add(slot);
-            grid.add(slot);
+            slotBtns.add(slot);
+            slotGrid.add(slot);
         }
-        card.add(grid, BorderLayout.CENTER);
+        card.add(slotGrid, BorderLayout.CENTER);
 
-        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
         legend.setOpaque(false);
         legend.add(legendDot(Theme.PAPER,  "Available"));
         legend.add(legendDot(Theme.CREAM,  "Booked"));
         legend.add(legendDot(Theme.ACCENT, "Selected"));
         card.add(legend, BorderLayout.SOUTH);
         return card;
+    }
+
+    private void refreshSlots() {
+        slotGroup.clearSelection();
+        for (JToggleButton slot : slotBtns) {
+            slot.setEnabled(false);
+            slot.setBackground(SLOT_BOOKED);
+            slot.setForeground(Theme.MUTED);
+        }
+        if (pickedDate == null || pickedAdmin == null) return;
+        boolean[] available = Appointment.availableTimeSlots(pickedDate, pickedAdmin, pickedDuration);
+        for (int i = 0; i < slotBtns.size(); i++) {
+            slotBtns.get(i).setEnabled(available[i]);
+            slotBtns.get(i).setBackground(available[i] ? SLOT_AVAILABLE : SLOT_BOOKED);
+            slotBtns.get(i).setForeground(available[i] ? Theme.INK      : Theme.MUTED);
+        }
     }
 
     private JPanel buildBookingFormCard() {
@@ -358,113 +519,217 @@ public class UserDashboard extends JPanel {
         title.setFont(Theme.FONT_LABEL); title.setForeground(Theme.MUTED);
         title.setAlignmentX(LEFT_ALIGNMENT);
 
+        List<Administrator> admins = JsonHandler.loadList("admins.json", Administrator.class);
+        String[] adminNames = new String[admins.size() + 1];
+        adminNames[0] = "— Select Administrator —";
+        for (int i = 0; i < admins.size(); i++)
+            adminNames[i + 1] = admins.get(i).username;
+        JComboBox<String> adminBox = Components.comboBox(adminNames);
+        adminBox.setAlignmentX(LEFT_ALIGNMENT);
+        adminBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        adminBox.addActionListener(e -> {
+            int idx = adminBox.getSelectedIndex();
+            pickedAdmin = idx == 0 ? null : (String) adminBox.getSelectedItem();
+            refreshSlots();
+        });
+
         String[] types = {"— Appointment Type —","Urgent","Follow-up","Assessment",
-                          "Virtual","In-person","Individual","Group"};
-        String[] parts = {"— Participants —","1","2","3","4 (max)"};
-        String[] durs  = {"— Duration —","30 min (½ hr)","60 min (1 hr)"};
-
+                "Virtual","In-person","Individual","Group"};
         JComboBox<String> typeBox = Components.comboBox(types);
-        JComboBox<String> partBox = Components.comboBox(parts);
-        JComboBox<String> durBox  = Components.comboBox(durs);
-        for (JComboBox<String> cb : new JComboBox[]{typeBox, partBox, durBox}) {
-            cb.setAlignmentX(LEFT_ALIGNMENT);
-            cb.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        typeBox.setAlignmentX(LEFT_ALIGNMENT);
+        typeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+
+        JToggleButton dur30 = new JToggleButton("30 min");
+        JToggleButton dur60 = new JToggleButton("60 min");
+        new ButtonGroup() {{ add(dur30); add(dur60); }};
+        for (JToggleButton db : new JToggleButton[]{dur30, dur60}) {
+            db.setFont(new Font("SansSerif", Font.BOLD, 13));
+            db.setFocusPainted(false);
+            db.setBackground(SLOT_AVAILABLE);
+            db.setForeground(Theme.INK);
+            db.setBorder(new LineBorder(Theme.BORDER, 1, true));
+            db.setPreferredSize(new Dimension(0, 60));
+            db.addActionListener(e -> {
+                dur30.setBackground(dur30.isSelected() ? SLOT_SELECTED : SLOT_AVAILABLE);
+                dur30.setForeground(dur30.isSelected() ? Theme.WHITE   : Theme.INK);
+                dur60.setBackground(dur60.isSelected() ? SLOT_SELECTED : SLOT_AVAILABLE);
+                dur60.setForeground(dur60.isSelected() ? Theme.WHITE   : Theme.INK);
+                pickedDuration = dur30.isSelected() ? 30 : 60;
+                refreshSlots();
+            });
         }
+        JPanel durRow = new JPanel(new GridLayout(1, 2, 8, 0));
+        durRow.setOpaque(false);
+        durRow.setAlignmentX(LEFT_ALIGNMENT);
+        durRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        durRow.add(dur30); durRow.add(dur60);
 
-        JLabel warn = new JLabel("⚠  Max duration: 1 hr · Participants vary by type");
-        warn.setFont(Theme.FONT_SMALL); warn.setForeground(Theme.MUTED);
-        warn.setBackground(Theme.CREAM); warn.setOpaque(true);
-        warn.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-        warn.setAlignmentX(LEFT_ALIGNMENT);
-        warn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-
-        JButton confirm = Components.primaryBtn("Confirm Booking  →");
+        JButton confirm = Components.primaryBtn("Request Appointment  →");
         confirm.setAlignmentX(LEFT_ALIGNMENT);
-        confirm.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        confirm.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         confirm.addActionListener(e -> {
+            String missing = "";
+            if (pickedAdmin == null)                        missing += "• Select an administrator\n";
+            if (pickedDate == null)                         missing += "• Pick a date\n";
+            if (!dur30.isSelected() && !dur60.isSelected()) missing += "• Choose a duration\n";
+            if (typeBox.getSelectedIndex() == 0)            missing += "• Choose appointment type\n";
+            boolean slotSelected = slotBtns.stream().anyMatch(JToggleButton::isSelected);
+            if (!slotSelected)                              missing += "• Select a time slot\n";
+
+            if (!missing.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Please complete the following before confirming:\n\n" + missing,
+                        "Incomplete Booking", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            JToggleButton selected = slotBtns.stream().filter(JToggleButton::isSelected).findFirst().get();
+            LocalTime startTime = LocalTime.parse(selected.getText());
+            AppointmentType type = AppointmentType.valueOf(
+                    typeBox.getSelectedItem().toString().toUpperCase().replace("-", "_").replace(" ", "_")
+            );
+
+            User.getUserObject(username).bookAppointment(pickedAdmin, pickedDate, startTime, pickedDuration, type);
+            refreshSlots();
             JOptionPane.showMessageDialog(this,
-                "Appointment booked successfully!\nStatus: Confirmed.",
-                "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
-            switchTo(CARD_APPOINTMENTS); // return to appointments view after booking
+                    "Appointment requested successfully!\nStatus: Pending.",
+                    "Request Sent", JOptionPane.INFORMATION_MESSAGE);
+            switchTo(CARD_APPOINTMENTS);
+            refreshAppointmentsTable();
         });
 
         card.add(title);
-        card.add(Box.createVerticalStrut(12));
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkLabel("Administrator"));
+        card.add(Box.createVerticalStrut(5));
+        card.add(adminBox);
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkLabel("Appointment Type"));
+        card.add(Box.createVerticalStrut(5));
         card.add(typeBox);
-        card.add(Box.createVerticalStrut(8));
-        card.add(partBox);
-        card.add(Box.createVerticalStrut(8));
-        card.add(durBox);
-        card.add(Box.createVerticalStrut(10));
-        card.add(warn);
-        card.add(Box.createVerticalStrut(12));
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkLabel("Duration"));
+        card.add(Box.createVerticalStrut(5));
+        card.add(durRow);
+        card.add(Box.createVerticalStrut(20));
         card.add(confirm);
         card.add(Box.createVerticalGlue());
         return card;
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 3 — NOTIFICATIONS
-    // ══════════════════════════════════════════════════════════
+    private JLabel mkLabel(String text) {
+        JLabel l = Components.sectionLabel(text);
+        l.setAlignmentX(LEFT_ALIGNMENT);
+        return l;
+    }
+
+    // ── VIEW 3 — NOTIFICATIONS ────────────────────────────────
 
     private JPanel buildNotificationsView() {
         JPanel view = new JPanel();
         view.setBackground(Theme.PAPER);
         view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
-        view.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        view.setBorder(BorderFactory.createEmptyBorder(28, 28, 28, 28));
 
         JLabel heading = new JLabel("Notifications & Reminders");
-        heading.setFont(new Font("Serif", Font.BOLD, 22));
+        heading.setFont(new Font("Serif", Font.BOLD, 24));
         heading.setForeground(Theme.INK);
         heading.setAlignmentX(LEFT_ALIGNMENT);
 
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setOpaque(false);
-        headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         headerRow.add(heading, BorderLayout.WEST);
         JLabel mark = new JLabel("Mark all read ›");
         mark.setFont(Theme.FONT_SMALL); mark.setForeground(Theme.ACCENT);
         mark.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        mark.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                notifsList.removeAll();
+                notifsList.revalidate();
+                notifsList.repaint();
+            }
+        });
         headerRow.add(mark, BorderLayout.EAST);
 
         JLabel sub = Components.subtitle("Reminders, confirmations, and slot updates appear here.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
+        notifsList = new JPanel();
+        notifsList.setOpaque(false);
+        notifsList.setLayout(new GridLayout(0, 1, 0, 10));
+        rebuildNotifs();
+
         view.add(headerRow);
         view.add(Box.createVerticalStrut(4));
         view.add(sub);
-        view.add(Box.createVerticalStrut(20));
-
-        JPanel list = new JPanel();
-        list.setOpaque(false);
-        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        list.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-
-        list.add(Components.notifRow("🔔","Reminder",
-            "Your appointment with Dr. Mahmoud is tomorrow at 10:00.",
-            "Today · 08:00", Theme.WARNING));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("✅","Confirmed",
-            "Your Follow-up on Mar 19 has been confirmed.",
-            "Yesterday · 14:32", Theme.SUCCESS));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("ℹ","Slot Freed",
-            "An earlier slot (Mar 14, 09:00) is now available.",
-            "Yesterday · 11:05", Theme.ACCENT2));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("🔔","Reminder",
-            "Assessment Session on Mar 22 starts in 3 days.",
-            "Mar 6 · 09:00", Theme.WARNING));
-
-        view.add(list);
         view.add(Box.createVerticalStrut(24));
+        view.add(notifsList);
+        view.add(Box.createVerticalStrut(28));
         return view;
+    }
+
+    private void rebuildNotifs() {
+        notifsList.removeAll();
+        Object[][] notifs = {
+                {"🔔", "Reminder",   "Your appointment with Dr. Mahmoud is tomorrow at 10:00.", "Today · 08:00",     Theme.WARNING},
+                {"✅", "Confirmed",  "Your Follow-up on Mar 19 has been confirmed.",             "Yesterday · 14:32", Theme.SUCCESS},
+                {"ℹ",  "Slot Freed", "An earlier slot (Mar 14, 09:00) is now available.",        "Yesterday · 11:05", Theme.ACCENT2},
+                {"🔔", "Reminder",   "Assessment Session on Mar 22 starts in 3 days.",           "Mar 6 · 09:00",     Theme.WARNING}
+        };
+        for (Object[] n : notifs)
+            notifsList.add(buildNotifRow((String)n[0], (String)n[1], (String)n[2], (String)n[3], (Color)n[4]));
+        notifsList.revalidate();
+        notifsList.repaint();
+    }
+
+    private JPanel buildNotifRow(String icon, String title, String body, String time, Color accent) {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setBackground(Theme.PAPER);
+        row.setBorder(BorderFactory.createCompoundBorder(
+                new MatteBorder(0, 3, 0, 0, accent),
+                BorderFactory.createCompoundBorder(
+                        new LineBorder(Theme.BORDER, 1),
+                        BorderFactory.createEmptyBorder(10, 12, 10, 12)
+                )
+        ));
+
+        JLabel ico = new JLabel(icon);
+        ico.setFont(new Font("SansSerif", Font.PLAIN, 16));
+
+        JPanel text = new JPanel(new GridLayout(3, 1, 0, 1));
+        text.setOpaque(false);
+        JLabel t  = new JLabel(title); t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
+        JLabel b  = new JLabel(body);  b.setFont(Theme.FONT_BODY);  b.setForeground(Theme.INK);
+        JLabel ts = new JLabel(time);  ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
+        text.add(t); text.add(b); text.add(ts);
+
+        JButton x = new JButton("X");
+        x.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        x.setForeground(Color.RED);
+        x.setBackground(Theme.PAPER);
+        x.setBorderPainted(false);
+        x.setFocusPainted(false);
+        x.setContentAreaFilled(false);
+        x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        //x.setPreferredSize(new Dimension(36, 36));
+        x.addActionListener(e -> {
+            Container parent = row.getParent();
+            parent.remove(row);
+            parent.revalidate();
+            parent.repaint();
+        });
+
+        row.add(ico,  BorderLayout.WEST);
+        row.add(text, BorderLayout.CENTER);
+        row.add(x,    BorderLayout.EAST);
+        return row;
     }
 
     // ── Helpers ───────────────────────────────────────────────
 
     private JPanel legendDot(Color color, String label) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         p.setOpaque(false);
         JLabel dot = new JLabel("■");
         dot.setForeground(color);
@@ -482,73 +747,104 @@ public class UserDashboard extends JPanel {
 
     // ── Table Cell Renderers ──────────────────────────────────
 
-    /** Renders status column as colored tag labels. */
-    private static class StatusTagRenderer extends DefaultTableCellRenderer {
+    private static Color rowBg(boolean sel, int row) {
+        return sel ? new Color(0xE8,0xE2,0xD8) : (row % 2 == 0 ? Theme.CARD : new Color(0xF2,0xEE,0xE6));
+    }
+
+    private static class TypeTagRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                boolean sel, boolean focus, int row, int col) {
+                                                                 boolean sel, boolean focus, int row, int col) {
             String val = v == null ? "" : v.toString();
             JLabel tag;
             switch (val) {
-                case "Confirmed": tag = Components.tagConfirmed(); break;
-                case "Virtual":   tag = Components.tagVirtual();   break;
-                case "Pending":   tag = Components.tagPending();   break;
-                case "Urgent":    tag = Components.tagUrgent();    break;
-                default:          tag = new JLabel(val);
+                case "URGENT":     case "Urgent":     tag = Components.tagUrgent();  break;
+                case "VIRTUAL":    case "Virtual":    tag = Components.tagVirtual(); break;
+                case "GROUP":      case "Group":      tag = Components.tagGroup();   break;
+                case "IN_PERSON":  case "In-person":  case "In_Person":
+                    tag = Components.tag("In-Person",  new Color(0xD2,0xE8,0xFA), Theme.ACCENT2); break;
+                case "FOLLOW_UP":  case "Follow-up":  case "Follow_Up":
+                    tag = Components.tag("Follow-Up",  new Color(0xFA,0xEE,0xD2), Theme.WARNING); break;
+                case "ASSESSMENT": case "Assessment":
+                    tag = Components.tag("Assessment", new Color(0xEC,0xE3,0xFA), new Color(0x6B,0x3F,0xC8)); break;
+                case "INDIVIDUAL": case "Individual":
+                    tag = Components.tag("Individual", new Color(0xD4,0xED,0xDF), Theme.SUCCESS); break;
+                default: tag = new JLabel(val);
             }
-            tag.setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
+            tag.setBackground(rowBg(sel, row));
             tag.setOpaque(true);
             return tag;
         }
     }
 
-    /** Renders Modify + Cancel buttons in the Actions column. */
-    private static class ActionCellRenderer implements TableCellRenderer {
+    private static class StatusTagRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                boolean sel, boolean focus, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-            p.setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
-            p.add(Components.dangerBtn("Cancel"));
+                                                                 boolean sel, boolean focus, int row, int col) {
+            String val = v == null ? "" : v.toString();
+            JLabel tag;
+            switch (val) {
+                case "CONFIRMED": case "Confirmed": tag = Components.tagConfirmed(); break;
+                case "PENDING":   case "Pending":   tag = Components.tagPending();   break;
+                case "URGENT":    case "Urgent":    tag = Components.tagUrgent();    break;
+                case "CANCELLED": case "Cancelled":
+                    tag = Components.tag("Cancelled", new Color(0xF0,0xD8,0xD8), Theme.ACCENT); break;
+                default: tag = new JLabel(val);
+            }
+            tag.setBackground(rowBg(sel, row));
+            tag.setOpaque(true);
+            return tag;
+        }
+    }
+
+    private class ActionCellRenderer implements TableCellRenderer {
+        @Override public Component getTableCellRendererComponent(JTable t, Object v,
+                                                                 boolean sel, boolean focus, int row, int col) {
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 8));
+            p.setBackground(rowBg(sel, row));
+            try {
+                String dateStr = (String) apptModel.getValueAt(row, 0);
+                String timeStr = (String) apptModel.getValueAt(row, 2);
+                LocalDateTime apptTime = LocalDateTime.of(LocalDate.parse(dateStr), LocalTime.parse(timeStr));
+                if (apptTime.isAfter(LocalDateTime.now()))
+                    p.add(Components.dangerBtn("Cancel"));
+            } catch (Exception ignored) {}
             return p;
         }
     }
 
-    /** Editor so Modify / Cancel buttons are interactive when clicked. */
-    private static class ActionCellEditor extends DefaultCellEditor {
-        private final DefaultTableModel model;
+    private class ActionCellEditor extends DefaultCellEditor {
+        public ActionCellEditor(JCheckBox c) { super(c); }
+        @Override public Component getTableCellEditorComponent(JTable t, Object v,
+                                                               boolean sel, int row, int col) {
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 8));
+            p.setBackground(new Color(0xE8, 0xE2, 0xD8));
+            try {
+                String dateStr = (String) apptModel.getValueAt(row, 0);
+                String timeStr = (String) apptModel.getValueAt(row, 2);
+                LocalDateTime apptTime = LocalDateTime.of(LocalDate.parse(dateStr), LocalTime.parse(timeStr));
+                if (apptTime.isAfter(LocalDateTime.now())) {
+                    JButton can = Components.dangerBtn("Cancel");
+                    can.addActionListener(e -> {
+                        int r = JOptionPane.showConfirmDialog(t,
+                                "Cancel this appointment?\nThe slot will become available again.",
+                                "Confirm Cancellation", JOptionPane.YES_NO_OPTION);
+                        if (r == JOptionPane.YES_OPTION) {
+                            // Cancel the appointment
+                            User.getUserObject(username).cancelAppointment(
+                                    User.getUserObject(username).getUserAppointments().get(row));
 
-        /**
-         * @param c     dummy checkbox required by DefaultCellEditor
-         * @param model table model used to remove cancelled rows
-         */
-        public ActionCellEditor(JCheckBox c, DefaultTableModel model) {
-            super(c);
-            this.model = model;
-        }
+                            JOptionPane.showMessageDialog(t, "Appointment cancelled. Slot is now free.");
 
-        @Override
-        public Component getTableCellEditorComponent(JTable t, Object v,
-                                                     boolean sel, int row, int col) {
-
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-            p.setBackground(Theme.CREAM);
-
-            JButton can = Components.dangerBtn("Cancel");
-
-            can.addActionListener(e -> {
-                int r = JOptionPane.showConfirmDialog(t,
-                        "Cancel this appointment?\nThe slot will become available again.",
-                        "Confirm Cancellation", JOptionPane.YES_NO_OPTION);
-
-                if (r == JOptionPane.YES_OPTION) {
-                    model.removeRow(row);
-                    JOptionPane.showMessageDialog(t,
-                            "Appointment cancelled. Slot is now free.");
+                            stopCellEditing();               // stop editing first
+                            refreshAppointmentsTable();      // refresh table model
+                            // repaint only the Actions cell of this row
+                            t.repaint(t.getCellRect(row, 6, false));
+                        } else {
+                            stopCellEditing();
+                        }
+                    });
+                    p.add(can);
                 }
-
-                stopCellEditing();
-            });
-
-            p.add(can);
+            } catch (Exception ignored) {}
             return p;
         }
     }

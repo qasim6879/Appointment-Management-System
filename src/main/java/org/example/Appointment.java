@@ -1,59 +1,85 @@
 package org.example;
+
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-	public class Appointment {
-	    private String id;
-	    private LocalDate date;
-	    private LocalTime startTime;
-	    private int duration;
-	    private AppointmentType type;
-	    private int participantCount;
-	    private AppointmentStatus status;
-	    
-	    public Appointment(String id, LocalDate date, LocalTime startTime, int duration, AppointmentType type) {
-	        this.id = id;
-	        this.date = date;
-	        this.startTime = startTime;
-	        this.duration = duration;
-	        this.type = type;
-	        this.participantCount = 0;
-	        this.status = AppointmentStatus.AVAILABLE;
-	    }
-	    public String getId() {
-	        return id;
-	        
-	    }
-	    public LocalDate getDate() {
-	        return date;
-	        }
-	    public LocalTime getStartTime() {
-	    		        return startTime;
-	    }
-	    
-	    public int getDuration() {
-	        return duration;
-	    }
-	    
-	    public AppointmentType getType() {
-	        return type;
-	    }
-	    private List<Appointment> appointments = new ArrayList<>();
+import java.util.*;
 
-	    public void bookAppointment(Appointment appointment) {
-	        appointments.add(appointment);
-	        System.out.println("Appointment booked: " + appointment.getId());
-	    }
+public class Appointment {
+	private User user;
+	private Administrator admin;
+	private LocalDate date;
+	private LocalTime startTime;
+	private int duration;
+	private AppointmentType type;
+	private AppointmentStatus status;
+	private int maxParticipants;
 
-	    public void cancelAppointment(String id) {
-	        appointments.removeIf(a -> a.getId().equals(id));
-	        System.out.println("Appointment cancelled: " + id);
-	    }
+	public Appointment(User user, Administrator admin, LocalDate date, LocalTime startTime, int duration, AppointmentType type, AppointmentStatus status) {
+		this.user = user;
+		this.admin = admin;
+		this.date = date;
+		this.startTime = startTime;
+		this.duration = duration;
+		this.type = type;
+		this.status = status;
 
-	    public List<Appointment> getAppointments() {
-	        return appointments;
-	    }
-	    
-	    public Appointment() {}
+		switch (this.type) {
+			case URGENT, INDIVIDUAL: maxParticipants = 1; break;
+			case VIRTUAL: maxParticipants = 5; break;
+			default: maxParticipants = 3;
+		}
 	}
 
+	public User getUser() { return user; }
+	public Administrator getAdmin() {
+		return admin;
+	}
+	public LocalDate getDate() {
+		return date;
+	}
+	public LocalTime getStartTime() {
+		return startTime;
+	}
+	public int getDuration() {
+		return duration;
+	}
+	public AppointmentType getType() {
+		return type;
+	}
+	public AppointmentStatus getStatus() {
+		return status;
+	}
+	public int getMaxParticipants() { return maxParticipants; }
+
+	public void setUser(User user) { this.user = user; }
+	public void setAdmin(Administrator admin) { this.admin = admin; }
+	public void setDate(LocalDate date) { this.date = date; }
+	public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+	public void setDuration(int duration) { this.duration = duration; }
+	public void setType(AppointmentType type) { this.type = type; }
+	public void setStatus(AppointmentStatus status) { this.status = status; }
+
+	public static boolean[] availableTimeSlots(LocalDate date, String adminUsername, int duration){
+		boolean[] available = new boolean[12];
+		Arrays.fill(available, true);
+
+		List <Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
+
+		for (int i = 0; i < appointments.size(); i++){
+			if (appointments.get(i).getAdmin().getUsername().equals(adminUsername) && appointments.get(i).getDate().equals(date) && appointments.get(i).getStatus() != AppointmentStatus.CANCELLED){
+				int hour = appointments.get(i).getStartTime().getHour();
+				int minute = appointments.get(i).getStartTime().getMinute();
+				int index = (hour - 9) * 2 + (minute / 30);
+
+				available[index] = false;
+				if (appointments.get(i).getDuration() == 60 && index < 11)
+					available[index + 1] = false;
+
+				if (duration == 60 && index > 0)
+					available[index - 1] = false;
+			}
+		}
+		return available;
+	}
+
+	public Appointment() {}
+}
