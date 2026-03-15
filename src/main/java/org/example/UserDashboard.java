@@ -715,8 +715,8 @@ public class UserDashboard extends JPanel {
         JLabel ts = new JLabel(time);  ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
         text.add(t); text.add(b); text.add(ts);
 
-        JButton x = new JButton("X");
-        x.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        JButton x = new JButton("✖");
+        x.setFont(new Font("SansSerif", Font.PLAIN, 20));
         x.setForeground(Color.RED);
         x.setBackground(Theme.PAPER);
         x.setBorderPainted(false);

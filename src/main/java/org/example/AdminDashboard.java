@@ -5,6 +5,9 @@ import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.*;
 
 /**
  * Administrator Dashboard panel for AppointEase.
@@ -43,20 +46,21 @@ public class AdminDashboard extends JPanel {
 
     private CardLayout contentCards;
     private JPanel     contentPanel;
+    private JPanel     adminNotifsList;
 
     private JButton btnReservations;
     private JButton btnAdd;
     private JButton btnNotifs;
     private JButton btnReports;
 
-    // Add-appointment form fields — kept as fields so resetAddForm() can clear them
+    // Add-appointment form fields
     private JTextField        addUserField;
     private JComboBox<String> addTypeBox;
-    private JTextField        addDateField;
-    private JComboBox<String> addTimeBox;
-    private JComboBox<String> addDurationBox;
-    private JComboBox<String> addParticipantsBox;
-    private JTextArea         addNotesArea;
+    private JPanel            addSlotGrid    = new JPanel(new GridLayout(3, 4, 8, 8));
+    private List<JToggleButton> addSlotBtns  = new ArrayList<>();
+    private ButtonGroup       addSlotGroup   = new ButtonGroup();
+    private JToggleButton     addDur30;
+    private JToggleButton     addDur60;
 
     // Demo data — replace with real persistence layer
     private final Object[][] allData = {
@@ -119,7 +123,7 @@ public class AdminDashboard extends JPanel {
 
         btnReservations.addActionListener(e -> switchTo(CARD_RESERVATIONS));
         btnAdd.addActionListener(e          -> switchTo(CARD_ADD));
-        btnNotifs.addActionListener(e       -> switchTo(CARD_NOTIFS));
+        btnNotifs.addActionListener(e -> { switchTo(CARD_NOTIFS); rebuildAdminNotifs(); });
         btnReports.addActionListener(e      -> switchTo(CARD_REPORTS));
 
         side.add(btnReservations);
@@ -329,6 +333,12 @@ public class AdminDashboard extends JPanel {
         };
         table = new JTable(tableModel);
         Components.styleTable(table);
+        table.setRowHeight(46);
+        JTableHeader th = table.getTableHeader();
+        th.setBackground(Theme.ACCENT);
+        th.setForeground(Theme.WHITE);
+        th.setFont(new Font("SansSerif", Font.BOLD, 12));
+        th.setPreferredSize(new Dimension(0, 38));
         table.getColumn("Status").setCellRenderer(new StatusRenderer());
         table.getColumn("Type").setCellRenderer(new TypeRenderer());
         table.getColumn("Admin Actions").setCellRenderer(new AdminActionRenderer());
@@ -339,7 +349,7 @@ public class AdminDashboard extends JPanel {
         JScrollPane sp = new JScrollPane(table);
         sp.setBorder(new LineBorder(Theme.BORDER, 1, true));
         sp.getViewport().setBackground(Theme.CARD);
-        sp.setPreferredSize(new Dimension(0, 240));
+        sp.setPreferredSize(new Dimension(0, 460));
         card.add(sp, BorderLayout.SOUTH);
 
         JPanel wrap = new JPanel(new BorderLayout(0, 8));
@@ -368,7 +378,7 @@ public class AdminDashboard extends JPanel {
         heading.setForeground(Theme.INK);
         heading.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel sub = Components.subtitle("Manually book an appointment on behalf of any user.");
+        JLabel sub = Components.subtitle("Pick a date and slot, fill in the details, then confirm.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
         view.add(heading);
@@ -376,139 +386,274 @@ public class AdminDashboard extends JPanel {
         view.add(sub);
         view.add(Box.createVerticalStrut(20));
 
-        // Form card
+        JPanel row = new JPanel(new GridLayout(1, 2, 20, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(LEFT_ALIGNMENT);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        row.add(buildAddSlotsCard());
+        row.add(buildAddFormCard());
+        view.add(row);
+        view.add(Box.createVerticalStrut(24));
+        return view;
+    }
+
+    private JPanel buildAddSlotsCard() {
+        JPanel card = Components.card();
+        card.setLayout(new BorderLayout(0, 16));
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        JLabel t = new JLabel("AVAILABLE SLOTS — pick a date");
+        t.setFont(Theme.FONT_LABEL); t.setForeground(Theme.MUTED);
+        JLabel ch = new JLabel("Change date ›");
+        ch.setFont(Theme.FONT_SMALL); ch.setForeground(Theme.ACCENT);
+        ch.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        ch.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { showAddDatePicker(t); }
+            @Override public void mouseEntered(MouseEvent e) { ch.setForeground(Theme.ACCENT2); }
+            @Override public void mouseExited(MouseEvent e)  { ch.setForeground(Theme.ACCENT); }
+        });
+        header.add(t, BorderLayout.WEST); header.add(ch, BorderLayout.EAST);
+        card.add(header, BorderLayout.NORTH);
+
+        String[] times = {"09:00","09:30","10:00","10:30","11:00","11:30",
+                "12:00","12:30","13:00","13:30","14:00","14:30"};
+        addSlotGrid.setOpaque(false);
+        addSlotBtns.clear();
+        for (String time : times) {
+            JToggleButton slot = new JToggleButton(time);
+            slot.setFont(Theme.FONT_BUTTON);
+            slot.setFocusPainted(false);
+            slot.setEnabled(true);
+            slot.setBackground(Theme.PAPER);
+            slot.setForeground(Theme.INK);
+            slot.setBorder(new LineBorder(Theme.BORDER, 1, true));
+            slot.setPreferredSize(new Dimension(0, 52));
+            slot.addActionListener(e -> {
+                for (JToggleButton s : addSlotBtns)
+                    if (!s.isSelected()) { s.setBackground(Theme.PAPER); s.setForeground(Theme.INK); }
+                slot.setBackground(Theme.ACCENT);
+                slot.setForeground(Theme.WHITE);
+            });
+            addSlotGroup.add(slot);
+            addSlotBtns.add(slot);
+            addSlotGrid.add(slot);
+        }
+        card.add(addSlotGrid, BorderLayout.CENTER);
+
+        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
+        legend.setOpaque(false);
+        legend.add(addLegendDot(Theme.PAPER,  "Available"));
+        legend.add(addLegendDot(Theme.CREAM,  "Booked"));
+        legend.add(addLegendDot(Theme.ACCENT, "Selected"));
+        card.add(legend, BorderLayout.SOUTH);
+        return card;
+    }
+
+    private JPanel buildAddFormCard() {
         JPanel card = Components.card();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setMaximumSize(new Dimension(680, Integer.MAX_VALUE));
-        card.setAlignmentX(LEFT_ALIGNMENT);
 
-        // User
-        card.add(mkFormRow("USER / PATIENT NAME",
-                addUserField = Components.textField("e.g. Jana Doe")));
-        card.add(Box.createVerticalStrut(14));
+        JLabel title = new JLabel("APPOINTMENT DETAILS");
+        title.setFont(Theme.FONT_LABEL); title.setForeground(Theme.MUTED);
+        title.setAlignmentX(LEFT_ALIGNMENT);
+
+        // Username field
+        addUserField = Components.textField("Enter username");
+        addUserField.setAlignmentX(LEFT_ALIGNMENT);
+        addUserField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
         // Type
         addTypeBox = Components.comboBox(new String[]{
                 "— Appointment Type —", "Urgent", "Follow-up", "Assessment",
                 "Virtual", "In-person", "Individual", "Group"
         });
-        card.add(mkFormRow("APPOINTMENT TYPE", addTypeBox));
-        card.add(Box.createVerticalStrut(14));
+        addTypeBox.setAlignmentX(LEFT_ALIGNMENT);
+        addTypeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Date + Time
-        addDateField = Components.textField("e.g. Mar 14");
-        addTimeBox   = Components.comboBox(new String[]{
-                "— Time Slot —",
-                "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-                "13:00", "13:30", "14:00", "14:30", "15:00", "15:30"
-        });
-        card.add(mkFormRowTwo("DATE", addDateField, "TIME SLOT", addTimeBox));
-        card.add(Box.createVerticalStrut(14));
+        // Duration toggle buttons
+        addDur30 = new JToggleButton("30 min");
+        addDur60 = new JToggleButton("60 min");
+        new ButtonGroup() {{ add(addDur30); add(addDur60); }};
+        for (JToggleButton db : new JToggleButton[]{addDur30, addDur60}) {
+            db.setFont(new Font("SansSerif", Font.BOLD, 13));
+            db.setFocusPainted(false);
+            db.setBackground(Theme.PAPER);
+            db.setForeground(Theme.INK);
+            db.setBorder(new LineBorder(Theme.BORDER, 1, true));
+            db.setPreferredSize(new Dimension(0, 60));
+            db.addActionListener(e -> {
+                addDur30.setBackground(addDur30.isSelected() ? Theme.ACCENT : Theme.PAPER);
+                addDur30.setForeground(addDur30.isSelected() ? Theme.WHITE  : Theme.INK);
+                addDur60.setBackground(addDur60.isSelected() ? Theme.ACCENT : Theme.PAPER);
+                addDur60.setForeground(addDur60.isSelected() ? Theme.WHITE  : Theme.INK);
+            });
+        }
+        JPanel durRow = new JPanel(new GridLayout(1, 2, 8, 0));
+        durRow.setOpaque(false);
+        durRow.setAlignmentX(LEFT_ALIGNMENT);
+        durRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        durRow.add(addDur30); durRow.add(addDur60);
 
-        // Duration + Participants
-        addDurationBox = Components.comboBox(new String[]{
-                "— Duration —", "30 min (½ hr)", "60 min (1 hr)"
-        });
-        addParticipantsBox = Components.comboBox(new String[]{
-                "— Participants —", "1", "2", "3", "4 (max)"
-        });
-        card.add(mkFormRowTwo("DURATION", addDurationBox, "PARTICIPANTS", addParticipantsBox));
-        card.add(Box.createVerticalStrut(14));
-
-        // Rule hint
-        JLabel ruleHint = new JLabel("⚠  Max duration: 1 hr · Max participants vary by appointment type");
-        ruleHint.setFont(Theme.FONT_SMALL);
-        ruleHint.setForeground(Theme.MUTED);
-        ruleHint.setBackground(Theme.CREAM);
-        ruleHint.setOpaque(true);
-        ruleHint.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
-        ruleHint.setAlignmentX(LEFT_ALIGNMENT);
-        ruleHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
-        card.add(ruleHint);
-        card.add(Box.createVerticalStrut(14));
-
-        // Notes
-        JLabel notesLabel = Components.sectionLabel("Notes (optional)");
-        notesLabel.setAlignmentX(LEFT_ALIGNMENT);
-        card.add(notesLabel);
-        card.add(Box.createVerticalStrut(5));
-
-        addNotesArea = new JTextArea(3, 0);
-        addNotesArea.setFont(Theme.FONT_BODY);
-        addNotesArea.setForeground(Theme.INK);
-        addNotesArea.setBackground(Theme.PAPER);
-        addNotesArea.setLineWrap(true);
-        addNotesArea.setWrapStyleWord(true);
-        addNotesArea.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER, 1, true),
-                BorderFactory.createEmptyBorder(6, 8, 6, 8)
-        ));
-        JScrollPane notesSp = new JScrollPane(addNotesArea);
-        notesSp.setBorder(null);
-        notesSp.setAlignmentX(LEFT_ALIGNMENT);
-        notesSp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
-        card.add(notesSp);
-        card.add(Box.createVerticalStrut(20));
-
-        // Buttons
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        btnRow.setOpaque(false);
-        btnRow.setAlignmentX(LEFT_ALIGNMENT);
         JButton confirmBtn = Components.primaryBtn("Confirm Booking  →");
+        confirmBtn.setAlignmentX(LEFT_ALIGNMENT);
+        confirmBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         confirmBtn.addActionListener(e -> handleAddBooking());
-        JButton resetBtn = Components.outlineBtn("Reset Form");
-        resetBtn.addActionListener(e -> resetAddForm());
-        btnRow.add(confirmBtn);
-        btnRow.add(resetBtn);
-        card.add(btnRow);
 
-        view.add(card);
-        view.add(Box.createVerticalStrut(24));
-        return view;
+        card.add(title);
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkAddLabel("Username"));
+        card.add(Box.createVerticalStrut(5));
+        card.add(addUserField);
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkAddLabel("Appointment Type"));
+        card.add(Box.createVerticalStrut(5));
+        card.add(addTypeBox);
+        card.add(Box.createVerticalStrut(16));
+        card.add(mkAddLabel("Duration"));
+        card.add(Box.createVerticalStrut(5));
+        card.add(durRow);
+        card.add(Box.createVerticalStrut(20));
+        card.add(confirmBtn);
+        card.add(Box.createVerticalGlue());
+        return card;
     }
 
-    /**
-     * Validates the add-appointment form and shows a confirmation summary.
-     * Wire the collected field values to your AppointmentService in the service layer.
-     */
+    private void showAddDatePicker(JLabel slotHeader) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Pick a Date", true);
+        dialog.setUndecorated(true);
+        dialog.setSize(300, 320);
+        dialog.setLocationRelativeTo(this);
+
+        final LocalDate[] cursor = { LocalDate.now().withDayOfMonth(1) };
+
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setBackground(Theme.CARD);
+        root.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Theme.BORDER, 1),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setOpaque(false);
+        JLabel monthLabel = new JLabel("", SwingConstants.CENTER);
+        monthLabel.setFont(new Font("Serif", Font.BOLD, 14));
+        monthLabel.setForeground(Theme.INK);
+        JButton prev  = Components.outlineBtn("‹");
+        JButton next  = Components.outlineBtn("›");
+        JButton close = Components.dangerBtn("✕");
+        close.addActionListener(e -> dialog.dispose());
+        JPanel navRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        navRight.setOpaque(false);
+        navRight.add(next); navRight.add(close);
+        nav.add(prev, BorderLayout.WEST);
+        nav.add(monthLabel, BorderLayout.CENTER);
+        nav.add(navRight, BorderLayout.EAST);
+        root.add(nav, BorderLayout.NORTH);
+
+        JPanel grid = new JPanel(new GridLayout(0, 7, 4, 4));
+        grid.setOpaque(false);
+        for (String d : new String[]{"Su","Mo","Tu","We","Th","Fr","Sa"}) {
+            JLabel h = new JLabel(d, SwingConstants.CENTER);
+            h.setFont(Theme.FONT_LABEL);
+            h.setForeground(d.equals("Fr") || d.equals("Sa") ? Theme.MUTED : Theme.INK);
+            grid.add(h);
+        }
+        root.add(grid, BorderLayout.CENTER);
+
+        JLabel hint = new JLabel("Weekends & past dates are unavailable", SwingConstants.CENTER);
+        hint.setFont(Theme.FONT_SMALL); hint.setForeground(Theme.MUTED);
+        root.add(hint, BorderLayout.SOUTH);
+
+        Runnable[] render = new Runnable[1];
+        render[0] = () -> {
+            while (grid.getComponentCount() > 7) grid.remove(grid.getComponentCount() - 1);
+            String month = cursor[0].getMonth().toString();
+            monthLabel.setText(month.charAt(0) + month.substring(1).toLowerCase() + " " + cursor[0].getYear());
+            int firstDow = cursor[0].withDayOfMonth(1).getDayOfWeek().getValue() % 7;
+            for (int i = 0; i < firstDow; i++) grid.add(new JLabel());
+            LocalDate today = LocalDate.now();
+            for (int d = 1; d <= cursor[0].lengthOfMonth(); d++) {
+                LocalDate date = cursor[0].withDayOfMonth(d);
+                DayOfWeek dow  = date.getDayOfWeek();
+                boolean unavail = dow == DayOfWeek.FRIDAY || dow == DayOfWeek.SATURDAY || !date.isAfter(today);
+                JButton btn = new JButton(String.valueOf(d));
+                btn.setFont(Theme.FONT_SMALL);
+                btn.setFocusPainted(false);
+                btn.setEnabled(!unavail);
+                btn.setBackground(unavail ? Theme.CREAM : Theme.PAPER);
+                btn.setForeground(unavail ? Theme.MUTED : Theme.INK);
+                btn.setBorder(new LineBorder(Theme.BORDER, 1, true));
+                btn.addActionListener(e -> {
+                    String m = date.getMonth().toString();
+                    slotHeader.setText("AVAILABLE SLOTS — "
+                            + (m.charAt(0) + m.substring(1).toLowerCase().substring(0, 2))
+                            + " " + date.getDayOfMonth());
+                    dialog.dispose();
+                });
+                grid.add(btn);
+            }
+            grid.revalidate(); grid.repaint();
+        };
+
+        prev.addActionListener(e -> { cursor[0] = cursor[0].minusMonths(1); render[0].run(); });
+        next.addActionListener(e -> { cursor[0] = cursor[0].plusMonths(1);  render[0].run(); });
+        render[0].run();
+
+        dialog.setContentPane(root);
+        dialog.setVisible(true);
+    }
+
+    private JPanel addLegendDot(Color color, String label) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        p.setOpaque(false);
+        JLabel dot = new JLabel("■"); dot.setForeground(color); dot.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        JLabel txt = new JLabel(label); txt.setFont(Theme.FONT_SMALL); txt.setForeground(Theme.MUTED);
+        p.add(dot); p.add(txt);
+        return p;
+    }
+
+    private JLabel mkAddLabel(String text) {
+        JLabel l = Components.sectionLabel(text);
+        l.setAlignmentX(LEFT_ALIGNMENT);
+        return l;
+    }
+
     private void handleAddBooking() {
         String user = addUserField.getText().trim();
         String type = (String) addTypeBox.getSelectedItem();
-        String date = addDateField.getText().trim();
-        String time = (String) addTimeBox.getSelectedItem();
-        String dur  = (String) addDurationBox.getSelectedItem();
-        String part = (String) addParticipantsBox.getSelectedItem();
+        boolean slotSelected = addSlotBtns.stream().anyMatch(JToggleButton::isSelected);
+        boolean durSelected  = addDur30.isSelected() || addDur60.isSelected();
 
-        if (user.isEmpty() || type.startsWith("—") || date.isEmpty()
-                || time.startsWith("—") || dur.startsWith("—") || part.startsWith("—")) {
+        if (user.isEmpty() || type.startsWith("—") || !slotSelected || !durSelected) {
             JOptionPane.showMessageDialog(this,
                     "Please fill in all required fields before confirming.",
                     "Incomplete Form", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
+        String slot = addSlotBtns.stream().filter(JToggleButton::isSelected).findFirst().get().getText();
+        String dur  = addDur30.isSelected() ? "30 min" : "60 min";
+
         JOptionPane.showMessageDialog(this,
                 "Appointment booked successfully!\n\n"
-                        + "User:         " + user + "\n"
-                        + "Type:         " + type + "\n"
-                        + "Date:         " + date + "  " + time + "\n"
-                        + "Duration:     " + dur  + "\n"
-                        + "Participants: " + part,
+                        + "User:     " + user + "\n"
+                        + "Type:     " + type + "\n"
+                        + "Slot:     " + slot + "\n"
+                        + "Duration: " + dur,
                 "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
 
-        resetAddForm();
-        switchTo(CARD_RESERVATIONS);
-    }
-
-    /** Clears all add-appointment form fields back to their defaults. */
-    private void resetAddForm() {
+        // reset
         addUserField.setText("");
         addTypeBox.setSelectedIndex(0);
-        addDateField.setText("");
-        addTimeBox.setSelectedIndex(0);
-        addDurationBox.setSelectedIndex(0);
-        addParticipantsBox.setSelectedIndex(0);
-        addNotesArea.setText("");
+        addSlotGroup.clearSelection();
+        for (JToggleButton s : addSlotBtns) { s.setBackground(Theme.PAPER); s.setForeground(Theme.INK); }
+        new ButtonGroup() {{ add(addDur30); add(addDur60); }};
+        addDur30.setSelected(false); addDur30.setBackground(Theme.PAPER); addDur30.setForeground(Theme.INK);
+        addDur60.setSelected(false); addDur60.setBackground(Theme.PAPER); addDur60.setForeground(Theme.INK);
+
+        switchTo(CARD_RESERVATIONS);
     }
 
     // ══════════════════════════════════════════════════════════
@@ -539,35 +684,81 @@ public class AdminDashboard extends JPanel {
         JLabel sub = Components.subtitle("System alerts, booking updates, and admin notifications.");
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
+        adminNotifsList = new JPanel(new GridLayout(0, 1, 0, 10));
+        adminNotifsList.setOpaque(false);
+        JPanel list = adminNotifsList;
+
+        mark.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                list.removeAll(); list.revalidate(); list.repaint();
+            }
+        });
+
+        rebuildAdminNotifs();
+
         view.add(headerRow);
         view.add(Box.createVerticalStrut(4));
         view.add(sub);
         view.add(Box.createVerticalStrut(20));
-
-        JPanel list = new JPanel();
-        list.setOpaque(false);
-        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        list.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-
-        list.add(Components.notifRow("⚠", "Capacity Warning",
-                "Group – Assessment on Mar 22 has reached max participants (4).",
-                "Today · 09:15", Theme.ACCENT));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("✅", "Booking Confirmed",
-                "Reservation #006 for Reem Haddad was confirmed successfully.",
-                "Today · 08:40", Theme.SUCCESS));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("🔔", "Upcoming Appointments",
-                "4 appointments scheduled for tomorrow (Mar 14).",
-                "Yesterday · 17:00", Theme.WARNING));
-        list.add(Box.createVerticalStrut(8));
-        list.add(Components.notifRow("ℹ", "Slot Freed",
-                "Reservation #003 was cancelled by user. Slot Mar 15 · 14:00 is now free.",
-                "Yesterday · 13:22", Theme.ACCENT2));
-
         view.add(list);
         view.add(Box.createVerticalStrut(24));
         return view;
+    }
+
+    private void rebuildAdminNotifs() {
+        adminNotifsList.removeAll();
+        Object[][] notifs = {
+                {"⚠",  "Capacity Warning",     "Group – Assessment on Mar 22 has reached max participants (4).", "Today · 09:15",     Theme.ACCENT},
+                {"✅", "Booking Confirmed",     "Reservation #006 for Reem Haddad was confirmed successfully.",  "Today · 08:40",     Theme.SUCCESS},
+                {"🔔", "Upcoming Appointments", "4 appointments scheduled for tomorrow.",                         "Yesterday · 17:00", Theme.WARNING},
+                {"ℹ",  "Slot Freed",            "Reservation #003 cancelled. Slot Mar 15 · 14:00 is now free.",  "Yesterday · 13:22", Theme.ACCENT2}
+        };
+        for (Object[] n : notifs)
+            adminNotifsList.add(buildAdminNotifRow((String)n[0], (String)n[1], (String)n[2], (String)n[3], (Color)n[4]));
+        adminNotifsList.revalidate();
+        adminNotifsList.repaint();
+    }
+
+    private JPanel buildAdminNotifRow(String icon, String title, String body, String time, Color accent) {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setBackground(Theme.PAPER);
+        row.setBorder(BorderFactory.createCompoundBorder(
+                new MatteBorder(0, 3, 0, 0, accent),
+                BorderFactory.createCompoundBorder(
+                        new LineBorder(Theme.BORDER, 1),
+                        BorderFactory.createEmptyBorder(10, 12, 10, 12)
+                )
+        ));
+
+        JLabel ico = new JLabel(icon);
+        ico.setFont(new Font("SansSerif", Font.PLAIN, 16));
+
+        JPanel text = new JPanel(new GridLayout(3, 1, 0, 1));
+        text.setOpaque(false);
+        JLabel t  = new JLabel(title); t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
+        JLabel b  = new JLabel(body);  b.setFont(Theme.FONT_BODY);  b.setForeground(Theme.INK);
+        JLabel ts = new JLabel(time);  ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
+        text.add(t); text.add(b); text.add(ts);
+
+        JButton x = new JButton("✖");
+        x.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        x.setForeground(Color.RED);
+        x.setBackground(Theme.PAPER);
+        x.setBorderPainted(false);
+        x.setFocusPainted(false);
+        x.setContentAreaFilled(false);
+        x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        x.addActionListener(e -> {
+            Container parent = row.getParent();
+            parent.remove(row);
+            parent.revalidate();
+            parent.repaint();
+        });
+
+        row.add(ico,  BorderLayout.WEST);
+        row.add(text, BorderLayout.CENTER);
+        row.add(x,    BorderLayout.EAST);
+        return row;
     }
 
     // ══════════════════════════════════════════════════════════
@@ -768,7 +959,7 @@ public class AdminDashboard extends JPanel {
     private static class AdminActionRenderer implements TableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
                                                                  boolean sel, boolean focus, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
             p.setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
             p.add(Components.outlineBtn("Edit"));
             p.add(Components.dangerBtn("Cancel"));
@@ -781,7 +972,7 @@ public class AdminDashboard extends JPanel {
 
         @Override public Component getTableCellEditorComponent(JTable t, Object v,
                                                                boolean sel, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
             p.setBackground(Theme.CREAM);
             JButton edit = Components.outlineBtn("Edit");
             JButton can  = Components.dangerBtn("Cancel");
