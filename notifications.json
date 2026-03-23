@@ -1,7 +1,18 @@
 [
   {
     "dateSent": "2026-03-11 11:37:38",
-    "message": "your appointment tommorrow at 9 am",
-    "active": true
+    "message": "your appointment tomorrow at 9 am",
+    "active": true,
+    "type": "REMINDER",
+    "user": 	{
+	    "username": "ali2",
+	    "email": "e.g. name@example.com",
+	    "password": "12345678"
+	  },
+    "admin":{
+	      "username": "adrian",
+	      "email": "adrian@gmail.com",
+	      "password": "999"
+	    }
   }
 ]

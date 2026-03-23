@@ -656,6 +656,10 @@ public class UserDashboard extends JPanel {
         mark.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         mark.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
+                List<Notification> notifs = Notification.getNotifications(username);
+                if (notifs != null)
+                    for (Notification n : notifs)
+                        n.setActive(false);
                 notifsList.removeAll();
                 notifsList.revalidate();
                 notifsList.repaint();
@@ -682,18 +686,41 @@ public class UserDashboard extends JPanel {
 
     private void rebuildNotifs() {
         notifsList.removeAll();
-        Object[][] notifs = {
-                {"🔔", "Reminder",   "Your appointment with Dr. Mahmoud is tomorrow at 10:00.", "Today · 08:00",     Theme.WARNING},
-                {"✅", "Confirmed",  "Your Follow-up on Mar 19 has been confirmed.",             "Yesterday · 14:32", Theme.SUCCESS},
-                {"ℹ",  "Slot Freed", "An earlier slot (Mar 14, 09:00) is now available.",        "Yesterday · 11:05", Theme.ACCENT2},
-                {"🔔", "Reminder",   "Assessment Session on Mar 22 starts in 3 days.",           "Mar 6 · 09:00",     Theme.WARNING}
-        };
-        for (Object[] n : notifs)
-            notifsList.add(buildNotifRow((String)n[0], (String)n[1], (String)n[2], (String)n[3], (Color)n[4]));
+        List<Notification> notifs =Notification.getNotifications(username);
+        if (notifs == null || notifs.isEmpty()) {
+            JLabel empty = new JLabel("No notifications yet.");
+            empty.setFont(Theme.FONT_BODY);
+            empty.setForeground(Theme.MUTED);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            notifsList.add(empty);
+        } else {
+            for (Notification n : notifs)
+                if (n.isActive())
+                    notifsList.add(buildNotifRow(n));
+        }
         notifsList.revalidate();
         notifsList.repaint();
     }
-
+    
+    private JPanel buildNotifRow(Notification notif) {
+        String icon;
+        Color accent;
+        switch (notif.getType()) {
+            case REMINDER:       icon = "🔔"; accent = Theme.WARNING; break;
+            case CONFIRMATION:   icon = "✅"; accent = Theme.SUCCESS;  break;
+            case CANCELLATION:   icon = "❌"; accent = Theme.ACCENT;   break;
+            default:             icon = "🔔"; accent = Theme.MUTED;    break;
+        }
+        String title = notif.getType().toString();
+        String admin = notif.getAdmin() != null ? notif.getAdmin().getUsername() : "System";
+        return buildNotifRow(icon, title, notif.getMessage(), notif.getDateSent(), accent);
+    }
+    
+    
+    
+    
+    
+    
     private JPanel buildNotifRow(String icon, String title, String body, String time, Color accent) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setBackground(Theme.PAPER);
