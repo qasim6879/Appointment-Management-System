@@ -72,14 +72,24 @@ public class User {
 	}
 
 	public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
-		List <Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
+	    List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
+	    Administrator admin = Administrator.getAdministratorObject(adminUsername);
+	    Appointment appt = new Appointment(this, admin, date, startTime, duration, type, AppointmentStatus.PENDING);
+	    appointments.add(appt);
+	    JsonHandler.saveList(appointments, "Appointments.json");
 
-		Administrator admin = Administrator.getAdministratorObject(adminUsername);
-
-		Appointment appt = new Appointment(this, admin, date, startTime, duration, type, AppointmentStatus.PENDING);
-		appointments.add(appt);
-
-		JsonHandler.saveList(appointments, "Appointments.json");
+	    // Create and save notification
+	    List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
+	    Notification notif = new Notification(
+	        "Your " + type.toString() + " appointment with " + adminUsername +
+	        " on " + date.toString() + " at " + startTime.toString() + " has been requested. Status: Pending.",
+	        true,
+	        this,
+	        admin,
+	        NotificationType.CONFIRMATION
+	    );
+	    notifications.add(notif);
+	    JsonHandler.saveList(notifications, "notifications.json");
 	}
 
 	public static User getUserObject(String username){

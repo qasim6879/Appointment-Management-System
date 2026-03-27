@@ -11,9 +11,7 @@ public class Notification {
    private Administrator admin;
    private NotificationType type;
     
-   public Notification() {}
-       
-
+  
     public Notification(String message, boolean active,User user, Administrator admin, NotificationType type) {
         this.message = message;
         this.active = active;
@@ -57,5 +55,16 @@ public class Notification {
 		return userNotifications;
 	}
     
+    
+    
+    public static void deleteNotification(Notification toDelete) {
+        List<Notification> all = JsonHandler.loadList("notifications.json", Notification.class);
+        all.removeIf(n ->
+            n.getUser().getUsername().equals(toDelete.getUser().getUsername()) &&
+            n.getMessage().equals(toDelete.getMessage()) &&
+            n.getDateSent().equals(toDelete.getDateSent())
+        );
+        JsonHandler.saveList(all ,"notifications.json");
+    }
     
 }

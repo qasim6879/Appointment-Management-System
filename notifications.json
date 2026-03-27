@@ -3,16 +3,32 @@
     "dateSent": "2026-03-11 11:37:38",
     "message": "your appointment tomorrow at 9 am",
     "active": true,
-    "type": "REMINDER",
-    "user": 	{
-	    "username": "ali2",
-	    "email": "e.g. name@example.com",
-	    "password": "12345678"
-	  },
-    "admin":{
-	      "username": "adrian",
-	      "email": "adrian@gmail.com",
-	      "password": "999"
-	    }
+    "user": {
+      "username": "ali2",
+      "email": "e.g. name@example.com",
+      "password": "12345678"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "REMINDER"
+  },
+  {
+    "dateSent": "2026-03-27 21:30:14",
+    "message": "Your IN_PERSON appointment with adrian on 2026-04-01 at 10:00 has been requested. Status: Pending.",
+    "active": true,
+    "user": {
+      "username": "ali2",
+      "email": "e.g. name@example.com",
+      "password": "12345678"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CONFIRMATION"
   }
 ]

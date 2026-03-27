@@ -706,14 +706,55 @@ public class UserDashboard extends JPanel {
         String icon;
         Color accent;
         switch (notif.getType()) {
-            case REMINDER:       icon = "🔔"; accent = Theme.WARNING; break;
-            case CONFIRMATION:   icon = "✅"; accent = Theme.SUCCESS;  break;
-            case CANCELLATION:   icon = "❌"; accent = Theme.ACCENT;   break;
-            default:             icon = "🔔"; accent = Theme.MUTED;    break;
+            case REMINDER:     icon = "🔔"; accent = Theme.WARNING; break;
+            case CONFIRMATION: icon = "✅"; accent = Theme.SUCCESS;  break;
+            case CANCELLATION: icon = "❌"; accent = Theme.ACCENT;   break;
+            default:           icon = "🔔"; accent = Theme.MUTED;    break;
         }
-        String title = notif.getType().toString();
-        String admin = notif.getAdmin() != null ? notif.getAdmin().getUsername() : "System";
-        return buildNotifRow(icon, title, notif.getMessage(), notif.getDateSent(), accent);
+
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setBackground(Theme.PAPER);
+        row.setBorder(BorderFactory.createCompoundBorder(
+                new MatteBorder(0, 3, 0, 0, accent),
+                BorderFactory.createCompoundBorder(
+                        new LineBorder(Theme.BORDER, 1),
+                        BorderFactory.createEmptyBorder(10, 12, 10, 12)
+                )
+        ));
+
+        JLabel ico = new JLabel(icon);
+        ico.setFont(new Font("SansSerif", Font.PLAIN, 16));
+
+        JPanel text = new JPanel(new GridLayout(3, 1, 0, 1));
+        text.setOpaque(false);
+        JLabel t  = new JLabel(notif.getType().toString());
+        t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
+        JLabel b  = new JLabel(notif.getMessage());
+        b.setFont(Theme.FONT_BODY); b.setForeground(Theme.INK);
+        JLabel ts = new JLabel(notif.getDateSent());
+        ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
+        text.add(t); text.add(b); text.add(ts);
+
+        JButton x = new JButton("✖");
+        x.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        x.setForeground(Color.RED);
+        x.setBackground(Theme.PAPER);
+        x.setBorderPainted(false);
+        x.setFocusPainted(false);
+        x.setContentAreaFilled(false);
+        x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        x.addActionListener(e -> {
+            Notification.deleteNotification(notif);   // ← removes from JSON
+            Container parent = row.getParent();
+            parent.remove(row);
+            parent.revalidate();
+            parent.repaint();
+        });
+
+        row.add(ico,  BorderLayout.WEST);
+        row.add(text, BorderLayout.CENTER);
+        row.add(x,    BorderLayout.EAST);
+        return row;
     }
     
     
