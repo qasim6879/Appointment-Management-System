@@ -48,15 +48,26 @@ public class Appointment {
 	public AppointmentStatus getStatus() {
 		return status;
 	}
-	public int getMaxParticipants() { return maxParticipants; }
 
-	public void setUser(User user) { this.user = user; }
-	public void setAdmin(Administrator admin) { this.admin = admin; }
+	public int getMaxParticipants() {
+		return maxParticipants;
+	}
+
+	//public void setUser(User user) { this.user = user; }
+	//public void setAdmin(Administrator admin) { this.admin = admin; }
 	public void setDate(LocalDate date) { this.date = date; }
 	public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 	public void setDuration(int duration) { this.duration = duration; }
-	public void setType(AppointmentType type) { this.type = type; }
 	public void setStatus(AppointmentStatus status) { this.status = status; }
+
+	public void setType(AppointmentType type) {
+		this.type = type;
+		switch (this.type) {
+			case URGENT, INDIVIDUAL: maxParticipants = 1; break;
+			case VIRTUAL: maxParticipants = 5; break;
+			default: maxParticipants = 3;
+		}
+	}
 
 	public static boolean[] availableTimeSlots(LocalDate date, String adminUsername, int duration){
 		boolean[] available = new boolean[12];

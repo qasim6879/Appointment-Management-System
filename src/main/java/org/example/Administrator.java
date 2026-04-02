@@ -20,14 +20,42 @@ public class Administrator extends User{
 		JsonHandler.saveList(appointments, "Appointments.json");
 	}
 
-	public static Administrator getAdministratorObject(String username){
-		List <Administrator> admins = JsonHandler.loadList("admins.json", Administrator.class);
-		for (Administrator obj: admins){
+	public static Administrator getAdministratorObject(String username) {
+		List<Administrator> admins = JsonHandler.loadList("admins.json", Administrator.class);
+		for (Administrator obj : admins) {
 			if (obj.getUsername().equals(username))
 				return obj;
 		}
 		return null;
 	}
+	
+	public void editAppointment(Appointment appt, LocalDate newDate, LocalTime newTime, int newDuration, AppointmentType newType) {
+		List<Appointment> allAppointments = JsonHandler.loadList("Appointments.json", Appointment.class);
+		for (Appointment obj : allAppointments) {
+			if (obj.getAdmin().getUsername().equals(appt.getAdmin().getUsername())
+					&& obj.getDate().equals(appt.getDate()) && obj.getStartTime().equals(appt.getStartTime())) {
+				obj.setDate(newDate);
+				obj.setDuration(newDuration);
+				obj.setStartTime(newTime);
+				obj.setType(newType);
+				break;
+			}
+		}
+		
+		JsonHandler.saveList(allAppointments, "Appointments.json");
+	}
 
 	public Administrator() {}
+
+	public static void confirmAppointment(Appointment appt) {
+		List<Appointment> allAppointments = JsonHandler.loadList("Appointments.json", Appointment.class);
+		for (Appointment obj : allAppointments) {
+			if (obj.getAdmin().getUsername().equals(appt.getAdmin().getUsername())
+					&& obj.getDate().equals(appt.getDate()) && obj.getStartTime().equals(appt.getStartTime())) {
+				obj.setStatus(AppointmentStatus.CONFIRMED);
+				break;
+			}
+		}
+		JsonHandler.saveList(allAppointments, "Appointments.json");
+	}
 }

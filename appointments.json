@@ -1,6 +1,24 @@
 [
   {
     "user": {
+      "username": "abdallah",
+      "email": "abdallah@gmail.com",
+      "password": "444"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "date": "2026-04-09",
+    "startTime": "09:00:00",
+    "duration": 60,
+    "type": "FOLLOW_UP",
+    "status": "CANCELLED",
+    "maxParticipants": 3
+  },
+  {
+    "user": {
       "username": "momen",
       "email": "momen@gmail.com",
       "password": "111"
@@ -10,48 +28,12 @@
       "email": "victor@gmail.com",
       "password": "888"
     },
-    "date": "2026-03-16",
+    "date": "2026-04-06",
     "startTime": "12:00:00",
-    "duration": 60,
-    "type": "ASSESSMENT",
+    "duration": 30,
+    "type": "VIRTUAL",
     "status": "CANCELLED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "ali2",
-      "email": "e.g. name@example.com",
-      "password": "12345678"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-13",
-    "startTime": "09:30:00",
-    "duration": 60,
-    "type": "URGENT",
-    "status": "CANCELLED",
-    "maxParticipants": 1
-  },
-  {
-    "user": {
-      "username": "ali2",
-      "email": "e.g. name@example.com",
-      "password": "12345678"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-13",
-    "startTime": "11:30:00",
-    "duration": 60,
-    "type": "URGENT",
-    "status": "PENDING",
-    "maxParticipants": 1
+    "maxParticipants": 5
   },
   {
     "user": {
@@ -64,65 +46,29 @@
       "email": "victor@gmail.com",
       "password": "888"
     },
+    "date": "2026-04-13",
+    "startTime": "12:00:00",
+    "duration": 30,
+    "type": "ASSESSMENT",
+    "status": "CONFIRMED",
+    "maxParticipants": 3
+  },
+  {
+    "user": {
+      "username": "qasim",
+      "email": "qasim@gmail.com",
+      "password": "222"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
     "date": "2026-04-08",
-    "startTime": "10:00:00",
+    "startTime": "10:30:00",
     "duration": 30,
     "type": "FOLLOW_UP",
-    "status": "CANCELLED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "ali2",
-      "email": "e.g. name@example.com",
-      "password": "12345678"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-13",
-    "startTime": "10:30:00",
-    "duration": 60,
-    "type": "URGENT",
-    "status": "PENDING",
-    "maxParticipants": 1
-  },
-  {
-    "user": {
-      "username": "ali2",
-      "email": "e.g. name@example.com",
-      "password": "12345678"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-01",
-    "startTime": "10:00:00",
-    "duration": 30,
-    "type": "IN_PERSON",
-    "status": "CANCELLED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "ali2",
-      "email": "e.g. name@example.com",
-      "password": "12345678"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-01",
-    "startTime": "10:00:00",
-    "duration": 30,
-    "type": "IN_PERSON",
-    "status": "PENDING",
+    "status": "CONFIRMED",
     "maxParticipants": 3
   }
 ]

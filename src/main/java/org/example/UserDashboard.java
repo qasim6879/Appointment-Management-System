@@ -206,13 +206,35 @@ public class UserDashboard extends JPanel {
     }
 
     private JPanel buildStats() {
+        ArrayList<Appointment> appts = User.getUserObject(username).getUserAppointments();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+
+        int upcoming = 0, completed = 0, pending = 0, reminders = 0;
+        for (Appointment a : appts) {
+            LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
+            boolean isFuture = apptTime.isAfter(now);
+            boolean isPast = apptTime.isBefore(now);
+            boolean isToday = a.getDate().equals(today);
+            String status = a.getStatus().toString().toUpperCase();
+
+            if (isFuture && !status.equals("CANCELLED"))
+                upcoming++;
+            if (isPast && status.equals("CONFIRMED"))
+                completed++;
+            if (isFuture && status.equals("PENDING"))
+                pending++;
+            if (isToday && isFuture && !status.equals("CANCELLED"))
+                reminders++;
+        }
+
         JPanel row = new JPanel(new GridLayout(1, 4, 16, 0));
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
-        row.add(Components.statCard("3", "Upcoming appointments", Theme.ACCENT2));
-        row.add(Components.statCard("7", "Completed",             Theme.SUCCESS));
-        row.add(Components.statCard("1", "Pending confirmation",  Theme.ACCENT));
-        row.add(Components.statCard("2", "Reminders today",       Theme.WARNING));
+        row.add(Components.statCard(String.valueOf(upcoming), "Upcoming appointments", Theme.ACCENT2));
+        row.add(Components.statCard(String.valueOf(completed), "Completed", Theme.SUCCESS));
+        row.add(Components.statCard(String.valueOf(pending), "Pending confirmation", Theme.ACCENT));
+        row.add(Components.statCard(String.valueOf(reminders), "Reminders today", Theme.WARNING));
         return row;
     }
 
@@ -313,11 +335,22 @@ public class UserDashboard extends JPanel {
     }
 
     private void refreshAppointmentsTable() {
-        if (apptModel == null) return;
+        if (apptModel == null)
+            return;
+
+        // Auto-cancel past pending appointments
+        User user = User.getUserObject(username);
+        for (Appointment a : user.getUserAppointments()) {
+            LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
+            if (apptTime.isBefore(LocalDateTime.now())
+                    && a.getStatus().toString().toUpperCase().equals("PENDING")) {
+                user.cancelAppointment(a);
+            }
+        }
+
         apptModel.setRowCount(0);
-        ArrayList<Appointment> appts = User.getUserObject(username).getUserAppointments();
-        for (Appointment a : appts) {
-            apptModel.addRow(new Object[]{
+        for (Appointment a : user.getUserAppointments()) {
+            apptModel.addRow(new Object[] {
                     a.getDate().toString(),
                     a.getAdmin().getUsername(),
                     a.getStartTime().toString(),

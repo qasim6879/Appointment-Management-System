@@ -44,18 +44,15 @@ public class Notification {
     
     public static List<Notification> getNotifications(String username) {
     	
-    List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
+        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
     	List<Notification> userNotifications = new ArrayList<>();
 		for (int i = 0; i < notifications.size(); i++) {
 			if (notifications.get(i).user.getUsername().equals(username)) {
-				userNotifications.add(notifications.get(i));
-			}
-			
+                userNotifications.add(notifications.get(i));
+            }
 		}
 		return userNotifications;
 	}
-    
-    
     
     public static void deleteNotification(Notification toDelete) {
         List<Notification> all = JsonHandler.loadList("notifications.json", Notification.class);
@@ -66,5 +63,4 @@ public class Notification {
         );
         JsonHandler.saveList(all ,"notifications.json");
     }
-    
 }

@@ -1,6 +1,6 @@
 package org.example;
 
-public  enum NotificationType {
+public enum NotificationType {
 	REMINDER,
 	CONFIRMATION,
 	CANCELLATION,

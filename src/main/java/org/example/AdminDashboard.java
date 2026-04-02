@@ -34,12 +34,15 @@ public class AdminDashboard extends JPanel {
     private static final String CARD_NOTIFS       = "NOTIFICATIONS";
     private static final String CARD_REPORTS      = "REPORTS";
 
-    private static final Color ADMIN_BG = new Color(0x1A, 0x0E, 0x0A);
+    private static final Color ADMIN_BG    = new Color(0x1A, 0x0E, 0x0A);
+    private static final Color SLOT_BOOKED = Theme.CREAM;
+    private static final Color SLOT_AVAIL  = Theme.PAPER;
+    private static final Color SLOT_SEL    = Theme.ACCENT;
 
     private final String         adminName;
     private final LogoutListener logoutListener;
 
-    // Kept as fields so filterTable() can reach them
+    // Table fields
     private JTable            table;
     private DefaultTableModel tableModel;
     private JTextField        searchField;
@@ -53,24 +56,22 @@ public class AdminDashboard extends JPanel {
     private JButton btnNotifs;
     private JButton btnReports;
 
+    private JPanel statsPanel;
     // Add-appointment form fields
-    private JTextField        addUserField;
-    private JComboBox<String> addTypeBox;
-    private JPanel            addSlotGrid    = new JPanel(new GridLayout(3, 4, 8, 8));
-    private List<JToggleButton> addSlotBtns  = new ArrayList<>();
-    private ButtonGroup       addSlotGroup   = new ButtonGroup();
-    private JToggleButton     addDur30;
-    private JToggleButton     addDur60;
+    private JTextField          addUserField;
+    private JComboBox<String>   addTypeBox;
+    private JPanel              addSlotGrid   = new JPanel(new GridLayout(3, 4, 8, 8));
+    private List<JToggleButton> addSlotBtns   = new ArrayList<>();
+    private ButtonGroup         addSlotGroup  = new ButtonGroup();
+    private JToggleButton       addDur30;
+    private JToggleButton       addDur60;
 
-    // Demo data — replace with real persistence layer
-    private final Object[][] allData = {
-            {"#001", "Jana Doe",          "In-person",  "Mar 14 · 10:00", "30 min", "1", "Confirmed"},
-            {"#002", "Omar Khalil",        "Urgent",     "Mar 14 · 11:00", "30 min", "1", "Urgent"   },
-            {"#003", "Lina Nasser",        "Virtual",    "Mar 15 · 14:00", "60 min", "1", "Pending"  },
-            {"#004", "Group – Assessment", "Group",      "Mar 22 · 09:00", "30 min", "4", "Pending"  },
-            {"#005", "Karim Saleh",        "Follow-up",  "Mar 23 · 09:30", "30 min", "1", "Confirmed"},
-            {"#006", "Reem Haddad",        "Individual", "Mar 24 · 15:00", "60 min", "1", "Confirmed"},
-    };
+    // Live data & booking state
+    private Administrator        adminObj;
+    private final List<Object[]>    liveData  = new ArrayList<>();
+    private final List<Appointment> liveAppts = new ArrayList<>();
+    private LocalDate            pickedAddDate      = null;
+    private int                  pickedAddDuration  = 30;
 
     /**
      * @param adminName      admin's display name
@@ -79,6 +80,7 @@ public class AdminDashboard extends JPanel {
     public AdminDashboard(String adminName, LogoutListener logoutListener) {
         this.adminName      = adminName;
         this.logoutListener = logoutListener;
+        this.adminObj       = Administrator.getAdministratorObject(adminName);
         setLayout(new BorderLayout());
         setBackground(Theme.PAPER);
 
@@ -92,6 +94,8 @@ public class AdminDashboard extends JPanel {
 
         add(buildSidebar(), BorderLayout.WEST);
         add(buildMain(),    BorderLayout.CENTER);
+
+        loadTableData();
     }
 
     // ── Sidebar ───────────────────────────────────────────────
@@ -121,7 +125,7 @@ public class AdminDashboard extends JPanel {
         btnNotifs       = mkSideBtn("🔔", "Notifications");
         btnReports      = mkSideBtn("📊", "Reports");
 
-        btnReservations.addActionListener(e -> switchTo(CARD_RESERVATIONS));
+        btnReservations.addActionListener(e -> { loadTableData(); switchTo(CARD_RESERVATIONS); });
         btnAdd.addActionListener(e          -> switchTo(CARD_ADD));
         btnNotifs.addActionListener(e -> { switchTo(CARD_NOTIFS); rebuildAdminNotifs(); });
         btnReports.addActionListener(e      -> switchTo(CARD_REPORTS));
@@ -144,10 +148,6 @@ public class AdminDashboard extends JPanel {
         return side;
     }
 
-    /**
-     * Switches the content card and updates the sidebar highlight.
-     * @param card one of the CARD_* constants
-     */
     private void switchTo(String card) {
         contentCards.show(contentPanel, card);
         switch (card) {
@@ -158,7 +158,6 @@ public class AdminDashboard extends JPanel {
         }
     }
 
-    /** Highlights one sidebar button and resets the others. */
     private void setActive(JButton active) {
         for (JButton b : new JButton[]{btnReservations, btnAdd, btnNotifs, btnReports}) {
             boolean on = (b == active);
@@ -249,7 +248,8 @@ public class AdminDashboard extends JPanel {
         view.setBackground(Theme.PAPER);
         view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
         view.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
-        view.add(buildStats());
+        statsPanel = buildStats();
+        view.add(statsPanel);
         view.add(Box.createVerticalStrut(20));
         view.add(buildReservationsCard());
         view.add(Box.createVerticalStrut(24));
@@ -257,13 +257,43 @@ public class AdminDashboard extends JPanel {
     }
 
     private JPanel buildStats() {
+        int total = liveAppts.size();
+
+        int completed = 0;
+        int todayReminders = 0;
+        int cancelled = 0;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+
+        for (Appointment a : liveAppts) {
+            LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
+            String status = a.getStatus().toString().toUpperCase();
+
+            // Completed
+            if (apptTime.isBefore(now) && status.equals("CONFIRMED"))
+                completed++;
+
+            // Today reminders
+            if (a.getDate().equals(today) &&
+                    apptTime.isAfter(now) &&
+                    !status.equals("CANCELLED"))
+                todayReminders++;
+
+            // Cancelled
+            if (status.equals("CANCELLED"))
+                cancelled++;
+        }
+
         JPanel row = new JPanel(new GridLayout(1, 4, 12, 0));
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
-        row.add(Components.statCard("" + allData.length, "Total today",     Theme.ACCENT2));
-        row.add(Components.statCard("4",                  "Confirmed",       Theme.SUCCESS));
-        row.add(Components.statCard("1",                  "Urgent cases",    Theme.ACCENT));
-        row.add(Components.statCard("3",                  "Slots remaining", Theme.WARNING));
+
+        row.add(Components.statCard(String.valueOf(total), "Total", Theme.ACCENT2));
+        row.add(Components.statCard(String.valueOf(completed), "Completed", Theme.SUCCESS));
+        row.add(Components.statCard(String.valueOf(todayReminders), "Today Reminders", Theme.ACCENT));
+        row.add(Components.statCard(String.valueOf(cancelled), "Cancelled Appointments", Theme.WARNING));
+
         return row;
     }
 
@@ -328,7 +358,7 @@ public class AdminDashboard extends JPanel {
 
         // Table
         String[] cols = {"#", "User", "Type", "Date & Time", "Duration", "Participants", "Status", "Admin Actions"};
-        tableModel = new DefaultTableModel(allData, cols) {
+        tableModel = new DefaultTableModel(new Object[0][], cols) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
         table = new JTable(tableModel);
@@ -424,15 +454,15 @@ public class AdminDashboard extends JPanel {
             JToggleButton slot = new JToggleButton(time);
             slot.setFont(Theme.FONT_BUTTON);
             slot.setFocusPainted(false);
-            slot.setEnabled(true);
-            slot.setBackground(Theme.PAPER);
-            slot.setForeground(Theme.INK);
+            slot.setEnabled(false);
+            slot.setBackground(SLOT_BOOKED);
+            slot.setForeground(Theme.MUTED);
             slot.setBorder(new LineBorder(Theme.BORDER, 1, true));
             slot.setPreferredSize(new Dimension(0, 52));
             slot.addActionListener(e -> {
                 for (JToggleButton s : addSlotBtns)
-                    if (!s.isSelected()) { s.setBackground(Theme.PAPER); s.setForeground(Theme.INK); }
-                slot.setBackground(Theme.ACCENT);
+                    if (!s.isSelected()) { s.setBackground(SLOT_AVAIL); s.setForeground(Theme.INK); }
+                slot.setBackground(SLOT_SEL);
                 slot.setForeground(Theme.WHITE);
             });
             addSlotGroup.add(slot);
@@ -443,9 +473,9 @@ public class AdminDashboard extends JPanel {
 
         JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
         legend.setOpaque(false);
-        legend.add(addLegendDot(Theme.PAPER,  "Available"));
-        legend.add(addLegendDot(Theme.CREAM,  "Booked"));
-        legend.add(addLegendDot(Theme.ACCENT, "Selected"));
+        legend.add(addLegendDot(SLOT_AVAIL,  "Available"));
+        legend.add(addLegendDot(SLOT_BOOKED, "Booked"));
+        legend.add(addLegendDot(SLOT_SEL,    "Selected"));
         card.add(legend, BorderLayout.SOUTH);
         return card;
     }
@@ -458,12 +488,10 @@ public class AdminDashboard extends JPanel {
         title.setFont(Theme.FONT_LABEL); title.setForeground(Theme.MUTED);
         title.setAlignmentX(LEFT_ALIGNMENT);
 
-        // Username field
         addUserField = Components.textField("Enter username");
         addUserField.setAlignmentX(LEFT_ALIGNMENT);
         addUserField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Type
         addTypeBox = Components.comboBox(new String[]{
                 "— Appointment Type —", "Urgent", "Follow-up", "Assessment",
                 "Virtual", "In-person", "Individual", "Group"
@@ -471,22 +499,23 @@ public class AdminDashboard extends JPanel {
         addTypeBox.setAlignmentX(LEFT_ALIGNMENT);
         addTypeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Duration toggle buttons
         addDur30 = new JToggleButton("30 min");
         addDur60 = new JToggleButton("60 min");
         new ButtonGroup() {{ add(addDur30); add(addDur60); }};
         for (JToggleButton db : new JToggleButton[]{addDur30, addDur60}) {
             db.setFont(new Font("SansSerif", Font.BOLD, 13));
             db.setFocusPainted(false);
-            db.setBackground(Theme.PAPER);
+            db.setBackground(SLOT_AVAIL);
             db.setForeground(Theme.INK);
             db.setBorder(new LineBorder(Theme.BORDER, 1, true));
             db.setPreferredSize(new Dimension(0, 60));
             db.addActionListener(e -> {
-                addDur30.setBackground(addDur30.isSelected() ? Theme.ACCENT : Theme.PAPER);
-                addDur30.setForeground(addDur30.isSelected() ? Theme.WHITE  : Theme.INK);
-                addDur60.setBackground(addDur60.isSelected() ? Theme.ACCENT : Theme.PAPER);
-                addDur60.setForeground(addDur60.isSelected() ? Theme.WHITE  : Theme.INK);
+                addDur30.setBackground(addDur30.isSelected() ? SLOT_SEL : SLOT_AVAIL);
+                addDur30.setForeground(addDur30.isSelected() ? Theme.WHITE : Theme.INK);
+                addDur60.setBackground(addDur60.isSelected() ? SLOT_SEL : SLOT_AVAIL);
+                addDur60.setForeground(addDur60.isSelected() ? Theme.WHITE : Theme.INK);
+                pickedAddDuration = addDur30.isSelected() ? 30 : 60;
+                refreshAddSlots();
             });
         }
         JPanel durRow = new JPanel(new GridLayout(1, 2, 8, 0));
@@ -577,7 +606,9 @@ public class AdminDashboard extends JPanel {
             for (int d = 1; d <= cursor[0].lengthOfMonth(); d++) {
                 LocalDate date = cursor[0].withDayOfMonth(d);
                 DayOfWeek dow  = date.getDayOfWeek();
-                boolean unavail = dow == DayOfWeek.FRIDAY || dow == DayOfWeek.SATURDAY || !date.isAfter(today);
+                boolean unavail = dow == DayOfWeek.FRIDAY || dow == DayOfWeek.SATURDAY
+                        || !date.isAfter(today)
+                        || date.isAfter(today.plusDays(30));
                 JButton btn = new JButton(String.valueOf(d));
                 btn.setFont(Theme.FONT_SMALL);
                 btn.setFocusPainted(false);
@@ -590,6 +621,8 @@ public class AdminDashboard extends JPanel {
                     slotHeader.setText("AVAILABLE SLOTS — "
                             + (m.charAt(0) + m.substring(1).toLowerCase().substring(0, 2))
                             + " " + date.getDayOfMonth());
+                    pickedAddDate = date;
+                    refreshAddSlots();
                     dialog.dispose();
                 });
                 grid.add(btn);
@@ -603,6 +636,357 @@ public class AdminDashboard extends JPanel {
 
         dialog.setContentPane(root);
         dialog.setVisible(true);
+    }
+
+    private void refreshAddSlots() {
+        addSlotGroup.clearSelection();
+        for (JToggleButton slot : addSlotBtns) {
+            slot.setEnabled(false);
+            slot.setBackground(SLOT_BOOKED);
+            slot.setForeground(Theme.MUTED);
+        }
+        if (pickedAddDate == null)
+            return;
+        boolean[] available = Appointment.availableTimeSlots(pickedAddDate, adminName, pickedAddDuration);
+        for (int i = 0; i < addSlotBtns.size(); i++) {
+            addSlotBtns.get(i).setEnabled(available[i]);
+            addSlotBtns.get(i).setBackground(available[i] ? SLOT_AVAIL : SLOT_BOOKED);
+            addSlotBtns.get(i).setForeground(available[i] ? Theme.INK : Theme.MUTED);
+        }
+    }
+    
+    private void showEditDialog(Appointment appt) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Edit Appointment", true);
+        dialog.setSize(420, 480);
+        dialog.setLocationRelativeTo(this);
+        dialog.setUndecorated(true);
+
+        // ── State ──────────────────────────────────────────────
+        final LocalDate[] editDate = { appt.getDate() };
+        final int[] editDuration = { appt.getDuration() };
+
+        // ── Root panel ─────────────────────────────────────────
+        JPanel root = new JPanel();
+        root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+        root.setBackground(Theme.CARD);
+        root.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Theme.BORDER, 1),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+
+        // Title
+        JLabel titleLbl = new JLabel("EDIT APPOINTMENT");
+        titleLbl.setFont(Theme.FONT_LABEL);
+        titleLbl.setForeground(Theme.MUTED);
+        titleLbl.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel userLbl = new JLabel("User: " + appt.getUser().getUsername());
+        userLbl.setFont(new Font("SansSerif", Font.BOLD, 13));
+        userLbl.setForeground(Theme.INK);
+        userLbl.setAlignmentX(LEFT_ALIGNMENT);
+
+        // ── Date picker row ────────────────────────────────────
+        String initMonth = appt.getDate().getMonth().toString();
+        String initMon = initMonth.charAt(0) + initMonth.substring(1, 3).toLowerCase();
+        JLabel dateLbl = new JLabel("Date:  " + initMon + " " + appt.getDate().getDayOfMonth());
+        dateLbl.setFont(Theme.FONT_BODY);
+        dateLbl.setForeground(Theme.INK);
+
+        JLabel changeDateLink = new JLabel("Change ›");
+        changeDateLink.setFont(Theme.FONT_SMALL);
+        changeDateLink.setForeground(Theme.ACCENT);
+        changeDateLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JPanel dateRow = new JPanel(new BorderLayout(8, 0));
+        dateRow.setOpaque(false);
+        dateRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        dateRow.setAlignmentX(LEFT_ALIGNMENT);
+        dateRow.add(dateLbl, BorderLayout.WEST);
+        dateRow.add(changeDateLink, BorderLayout.EAST);
+
+        // ── Type combo ─────────────────────────────────────────
+        String[] typeOptions = { "Urgent", "Follow-up", "Assessment", "Virtual", "In-person", "Individual", "Group" };
+        JComboBox<String> typeBox = Components.comboBox(typeOptions);
+        typeBox.setAlignmentX(LEFT_ALIGNMENT);
+        typeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        typeBox.setSelectedItem(formatType(appt.getType()));
+
+        // ── Duration combo ─────────────────────────────────────
+        JComboBox<String> durBox = Components.comboBox(new String[] { "30 min", "60 min" });
+        durBox.setAlignmentX(LEFT_ALIGNMENT);
+        durBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        durBox.setSelectedItem(appt.getDuration() + " min");
+
+        // ── Time combo (dynamic) ───────────────────────────────
+        JComboBox<String> timeBox = Components.comboBox(new String[] { "— pick date first —" });
+        timeBox.setAlignmentX(LEFT_ALIGNMENT);
+        timeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+
+        // Helper: refresh time combo based on current editDate + editDuration
+        Runnable refreshTimes = () -> {
+            String currentSel = timeBox.getSelectedItem() != null ? timeBox.getSelectedItem().toString() : "";
+            timeBox.removeAllItems();
+            String[] slots = { "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+                    "12:00", "12:30", "13:00", "13:30", "14:00", "14:30" };
+            boolean[] available = Appointment.availableTimeSlots(editDate[0], adminName, editDuration[0]);
+            // Always include the appointment's own current slot so it's selectable
+            String currentApptTime = String.format("%02d:%02d",
+                    appt.getStartTime().getHour(), appt.getStartTime().getMinute());
+            boolean anyAdded = false;
+            for (int i = 0; i < slots.length; i++) {
+                if (available[i] || slots[i].equals(currentApptTime)) {
+                    timeBox.addItem(slots[i]);
+                    anyAdded = true;
+                }
+            }
+            if (!anyAdded)
+                timeBox.addItem("— no slots available —");
+            // Restore previous selection if still available, else default to current appt time
+            if (timeBox.getItemCount() > 0) {
+                boolean restored = false;
+                for (int i = 0; i < timeBox.getItemCount(); i++) {
+                    if (timeBox.getItemAt(i).equals(currentSel)) {
+                        timeBox.setSelectedIndex(i);
+                        restored = true;
+                        break;
+                    }
+                }
+                if (!restored) {
+                    for (int i = 0; i < timeBox.getItemCount(); i++) {
+                        if (timeBox.getItemAt(i).equals(currentApptTime)) {
+                            timeBox.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+
+        refreshTimes.run();
+
+        // Wire duration changes → refresh times
+        durBox.addActionListener(e -> {
+            String sel = (String) durBox.getSelectedItem();
+            editDuration[0] = sel != null && sel.startsWith("60") ? 60 : 30;
+            refreshTimes.run();
+        });
+
+        // Wire date change link → calendar picker → refresh times
+        changeDateLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JDialog cal = new JDialog(dialog, "Pick a Date", true);
+                cal.setUndecorated(true);
+                cal.setSize(300, 320);
+                cal.setLocationRelativeTo(dialog);
+
+                final LocalDate[] cursor = { editDate[0].withDayOfMonth(1) };
+
+                JPanel calRoot = new JPanel(new BorderLayout(0, 8));
+                calRoot.setBackground(Theme.CARD);
+                calRoot.setBorder(BorderFactory.createCompoundBorder(
+                        new LineBorder(Theme.BORDER, 1),
+                        BorderFactory.createEmptyBorder(16, 16, 16, 16)));
+
+                JPanel nav = new JPanel(new BorderLayout());
+                nav.setOpaque(false);
+                JLabel monthLbl = new JLabel("", SwingConstants.CENTER);
+                monthLbl.setFont(new Font("Serif", Font.BOLD, 14));
+                monthLbl.setForeground(Theme.INK);
+                JButton prev = Components.outlineBtn("‹");
+                JButton next = Components.outlineBtn("›");
+                JButton close = Components.dangerBtn("✕");
+                close.addActionListener(ev -> cal.dispose());
+                JPanel navRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+                navRight.setOpaque(false);
+                navRight.add(next);
+                navRight.add(close);
+                nav.add(prev, BorderLayout.WEST);
+                nav.add(monthLbl, BorderLayout.CENTER);
+                nav.add(navRight, BorderLayout.EAST);
+                calRoot.add(nav, BorderLayout.NORTH);
+
+                JPanel calGrid = new JPanel(new GridLayout(0, 7, 4, 4));
+                calGrid.setOpaque(false);
+                for (String d : new String[] { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" }) {
+                    JLabel h = new JLabel(d, SwingConstants.CENTER);
+                    h.setFont(Theme.FONT_LABEL);
+                    h.setForeground(d.equals("Fr") || d.equals("Sa") ? Theme.MUTED : Theme.INK);
+                    calGrid.add(h);
+                }
+                calRoot.add(calGrid, BorderLayout.CENTER);
+
+                JLabel hint = new JLabel("Weekends & past dates are unavailable", SwingConstants.CENTER);
+                hint.setFont(Theme.FONT_SMALL);
+                hint.setForeground(Theme.MUTED);
+                calRoot.add(hint, BorderLayout.SOUTH);
+
+                Runnable[] renderCal = new Runnable[1];
+                renderCal[0] = () -> {
+                    while (calGrid.getComponentCount() > 7)
+                        calGrid.remove(calGrid.getComponentCount() - 1);
+                    String mo = cursor[0].getMonth().toString();
+                    monthLbl.setText(mo.charAt(0) + mo.substring(1).toLowerCase() + " " + cursor[0].getYear());
+                    int firstDow = cursor[0].withDayOfMonth(1).getDayOfWeek().getValue() % 7;
+                    for (int i = 0; i < firstDow; i++)
+                        calGrid.add(new JLabel());
+                    LocalDate today = LocalDate.now();
+                    for (int dd = 1; dd <= cursor[0].lengthOfMonth(); dd++) {
+                        LocalDate date = cursor[0].withDayOfMonth(dd);
+                        DayOfWeek dow = date.getDayOfWeek();
+                        boolean unavail = dow == DayOfWeek.FRIDAY || dow == DayOfWeek.SATURDAY
+                                || !date.isAfter(today) || date.isAfter(today.plusDays(30));
+                        JButton btn = new JButton(String.valueOf(dd));
+                        btn.setFont(Theme.FONT_SMALL);
+                        btn.setFocusPainted(false);
+                        btn.setEnabled(!unavail);
+                        btn.setBackground(unavail ? Theme.CREAM : Theme.PAPER);
+                        btn.setForeground(unavail ? Theme.MUTED : Theme.INK);
+                        btn.setBorder(new LineBorder(Theme.BORDER, 1, true));
+                        btn.addActionListener(ev -> {
+                            editDate[0] = date;
+                            String m = date.getMonth().toString();
+                            dateLbl.setText("Date:  "
+                                    + (m.charAt(0) + m.substring(1, 3).toLowerCase())
+                                    + " " + date.getDayOfMonth());
+                            refreshTimes.run();
+                            cal.dispose();
+                        });
+                        calGrid.add(btn);
+                    }
+                    calGrid.revalidate();
+                    calGrid.repaint();
+                };
+
+                prev.addActionListener(ev -> {
+                    cursor[0] = cursor[0].minusMonths(1);
+                    renderCal[0].run();
+                });
+                next.addActionListener(ev -> {
+                    cursor[0] = cursor[0].plusMonths(1);
+                    renderCal[0].run();
+                });
+                renderCal[0].run();
+
+                cal.setContentPane(calRoot);
+                cal.setVisible(true);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                changeDateLink.setForeground(Theme.ACCENT2);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                changeDateLink.setForeground(Theme.ACCENT);
+            }
+        });
+
+        // ── Confirm button ─────────────────────────────────────
+        JButton confirmBtn = Components.primaryBtn("Save Changes  →");
+        confirmBtn.setAlignmentX(LEFT_ALIGNMENT);
+        confirmBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        confirmBtn.addActionListener(e -> {
+            String selTime = (String) timeBox.getSelectedItem();
+            if (selTime == null || selTime.startsWith("—")) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Please select a valid time slot.", "Missing Field", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            LocalTime newTime = LocalTime.parse(selTime);
+            int newDuration = editDuration[0];
+            AppointmentType newType = AppointmentType.valueOf(
+                    typeBox.getSelectedItem().toString().toUpperCase().replace("-", "_").replace(" ", "_"));
+            adminObj.editAppointment(appt, editDate[0], newTime, newDuration, newType);
+            dialog.dispose();
+            loadTableData();
+        });
+
+        // ── Cancel button ──────────────────────────────────────
+        JButton cancelBtn = Components.dangerBtn("Discard");
+        cancelBtn.setAlignmentX(LEFT_ALIGNMENT);
+        cancelBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        JPanel btnRow = new JPanel(new GridLayout(1, 2, 8, 0));
+        btnRow.setOpaque(false);
+        btnRow.setAlignmentX(LEFT_ALIGNMENT);
+        btnRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        btnRow.add(cancelBtn);
+        btnRow.add(confirmBtn);
+
+        // ── Assemble ───────────────────────────────────────────
+        root.add(titleLbl);
+        root.add(Box.createVerticalStrut(4));
+        root.add(userLbl);
+        root.add(Box.createVerticalStrut(20));
+        root.add(mkEditLabel("Date"));
+        root.add(Box.createVerticalStrut(5));
+        root.add(dateRow);
+        root.add(Box.createVerticalStrut(16));
+        root.add(mkEditLabel("Appointment Type"));
+        root.add(Box.createVerticalStrut(5));
+        root.add(typeBox);
+        root.add(Box.createVerticalStrut(16));
+        root.add(mkEditLabel("Duration"));
+        root.add(Box.createVerticalStrut(5));
+        root.add(durBox);
+        root.add(Box.createVerticalStrut(16));
+        root.add(mkEditLabel("Start Time"));
+        root.add(Box.createVerticalStrut(5));
+        root.add(timeBox);
+        root.add(Box.createVerticalStrut(24));
+        root.add(btnRow);
+
+        dialog.setContentPane(root);
+        dialog.setVisible(true);
+    }
+
+    private void refreshStats() {
+        if (statsPanel == null)
+            return;
+
+        statsPanel.removeAll();
+
+        int total = liveAppts.size();
+        int completed = 0;
+        int todayReminders = 0;
+        int cancelled = 0;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+
+        for (Appointment a : liveAppts) {
+            LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
+            String status = a.getStatus().toString().toUpperCase();
+
+            if (apptTime.isBefore(now) && status.equals("CONFIRMED"))
+                completed++;
+
+            if (a.getDate().equals(today) &&
+                    apptTime.isAfter(now) &&
+                    !status.equals("CANCELLED"))
+                todayReminders++;
+
+            if (status.equals("CANCELLED"))
+                cancelled++;
+        }
+
+        statsPanel.setLayout(new GridLayout(1, 4, 12, 0));
+        statsPanel.add(Components.statCard(String.valueOf(total), "Total", Theme.ACCENT2));
+        statsPanel.add(Components.statCard(String.valueOf(completed), "Completed", Theme.SUCCESS));
+        statsPanel.add(Components.statCard(String.valueOf(todayReminders), "Today Reminders", Theme.ACCENT));
+        statsPanel.add(Components.statCard(String.valueOf(cancelled), "Cancelled Appointments", Theme.WARNING));
+
+        statsPanel.revalidate();
+        statsPanel.repaint();
+    }
+
+    private JLabel mkEditLabel(String text) {
+        JLabel l = Components.sectionLabel(text);
+        l.setAlignmentX(LEFT_ALIGNMENT);
+        return l;
     }
 
     private JPanel addLegendDot(Color color, String label) {
@@ -621,38 +1005,62 @@ public class AdminDashboard extends JPanel {
     }
 
     private void handleAddBooking() {
-        String user = addUserField.getText().trim();
-        String type = (String) addTypeBox.getSelectedItem();
+        String targetUser = addUserField.getText().trim();
+        String type       = (String) addTypeBox.getSelectedItem();
         boolean slotSelected = addSlotBtns.stream().anyMatch(JToggleButton::isSelected);
         boolean durSelected  = addDur30.isSelected() || addDur60.isSelected();
 
-        if (user.isEmpty() || type.startsWith("—") || !slotSelected || !durSelected) {
+        String missing = "";
+        if (targetUser.isEmpty())  missing += "• Enter a username\n";
+        if (pickedAddDate == null) missing += "• Pick a date\n";
+        if (!durSelected)          missing += "• Choose a duration\n";
+        if (type.startsWith("—")) missing += "• Choose appointment type\n";
+        if (!slotSelected)         missing += "• Select a time slot\n";
+
+        if (!missing.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Please fill in all required fields before confirming.",
-                    "Incomplete Form", JOptionPane.WARNING_MESSAGE);
+                    "Please complete the following before confirming:\n\n" + missing,
+                    "Incomplete Booking", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        String slot = addSlotBtns.stream().filter(JToggleButton::isSelected).findFirst().get().getText();
-        String dur  = addDur30.isSelected() ? "30 min" : "60 min";
+        User targetUserObj = User.getUserObject(targetUser);
+        if (targetUserObj == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No user found with username: \"" + targetUser + "\".\nPlease check and try again.",
+                    "User Not Found", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JToggleButton selected = addSlotBtns.stream().filter(JToggleButton::isSelected).findFirst().get();
+        LocalTime startTime = LocalTime.parse(selected.getText());
+        AppointmentType apptType = AppointmentType.valueOf(
+                type.toUpperCase().replace("-", "_").replace(" ", "_")
+        );
+
+        targetUserObj.bookAppointment(adminName, pickedAddDate, startTime, pickedAddDuration, apptType);
+        refreshAddSlots();
 
         JOptionPane.showMessageDialog(this,
                 "Appointment booked successfully!\n\n"
-                        + "User:     " + user + "\n"
+                        + "User:     " + targetUser + "\n"
                         + "Type:     " + type + "\n"
-                        + "Slot:     " + slot + "\n"
-                        + "Duration: " + dur,
+                        + "Date:     " + pickedAddDate + "\n"
+                        + "Slot:     " + selected.getText() + "\n"
+                        + "Duration: " + pickedAddDuration + " min",
                 "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
 
-        // reset
+        // Reset form
         addUserField.setText("");
         addTypeBox.setSelectedIndex(0);
         addSlotGroup.clearSelection();
-        for (JToggleButton s : addSlotBtns) { s.setBackground(Theme.PAPER); s.setForeground(Theme.INK); }
-        new ButtonGroup() {{ add(addDur30); add(addDur60); }};
-        addDur30.setSelected(false); addDur30.setBackground(Theme.PAPER); addDur30.setForeground(Theme.INK);
-        addDur60.setSelected(false); addDur60.setBackground(Theme.PAPER); addDur60.setForeground(Theme.INK);
+        pickedAddDate     = null;
+        pickedAddDuration = 30;
+        addDur30.setSelected(false); addDur30.setBackground(SLOT_AVAIL); addDur30.setForeground(Theme.INK);
+        addDur60.setSelected(false); addDur60.setBackground(SLOT_AVAIL); addDur60.setForeground(Theme.INK);
+        for (JToggleButton s : addSlotBtns) { s.setEnabled(false); s.setBackground(SLOT_BOOKED); s.setForeground(Theme.MUTED); }
 
+        loadTableData();
         switchTo(CARD_RESERVATIONS);
     }
 
@@ -825,12 +1233,6 @@ public class AdminDashboard extends JPanel {
 
     // ── Form helpers ──────────────────────────────────────────
 
-    /**
-     * Builds a labelled single-field form row (label above, field below).
-     * @param labelText uppercase field label
-     * @param field     the input component
-     * @return assembled JPanel
-     */
     private JPanel mkFormRow(String labelText, JComponent field) {
         JPanel row = new JPanel();
         row.setOpaque(false);
@@ -846,14 +1248,6 @@ public class AdminDashboard extends JPanel {
         return row;
     }
 
-    /**
-     * Builds a two-field form row with each field taking half the width.
-     * @param label1 label for the left field
-     * @param field1 left input component
-     * @param label2 label for the right field
-     * @param field2 right input component
-     * @return assembled JPanel
-     */
     private JPanel mkFormRowTwo(String label1, JComponent field1,
                                 String label2, JComponent field2) {
         JPanel row = new JPanel(new GridLayout(1, 2, 16, 0));
@@ -865,16 +1259,75 @@ public class AdminDashboard extends JPanel {
         return row;
     }
 
+    // ── Data loading ──────────────────────────────────────────
+
+    private void loadTableData() {
+        liveData.clear();
+        liveAppts.clear();
+        if (adminObj != null) {
+            ArrayList<Appointment> appts = adminObj.getUserAppointments();
+            int i = 1;
+            for (Appointment appt : appts) {
+                String id           = String.format("#%03d", i++);
+                String user         = appt.getUser() != null ? appt.getUser().getUsername() : "Unknown";
+                String type         = formatType(appt.getType());
+                String dateTime     = formatDateTime(appt.getDate(), appt.getStartTime());
+                String duration     = appt.getDuration() + " min";
+                String participants = String.valueOf(appt.getMaxParticipants());
+                String status       = formatStatus(appt.getStatus());
+                liveData.add(new Object[]{id, user, type, dateTime, duration, participants, status});
+                liveAppts.add(appt);
+           }
+        }
+        if (tableModel != null) {
+            tableModel.setRowCount(0);
+            for (Object[] row : liveData)
+                tableModel.addRow(row);
+        }
+        
+        refreshStats();
+    }
+
+    private String formatType(AppointmentType type) {
+        if (type == null) return "";
+        switch (type) {
+            case URGENT:     return "Urgent";
+            case FOLLOW_UP:  return "Follow-up";
+            case ASSESSMENT: return "Assessment";
+            case VIRTUAL:    return "Virtual";
+            case IN_PERSON:  return "In-person";
+            case INDIVIDUAL: return "Individual";
+            case GROUP:      return "Group";
+            default:         return type.toString();
+        }
+    }
+
+    private String formatStatus(AppointmentStatus status) {
+        if (status == null) return "";
+        switch (status) {
+            case CONFIRMED: return "Confirmed";
+            case PENDING:   return "Pending";
+            case CANCELLED: return "Cancelled";
+            default:        return status.toString();
+        }
+    }
+
+    private String formatDateTime(LocalDate date, LocalTime time) {
+        if (date == null) return "";
+        String month = date.getMonth().toString();
+        String mon   = month.charAt(0) + month.substring(1, 3).toLowerCase();
+        String t     = time != null
+                ? String.format(" · %02d:%02d", time.getHour(), time.getMinute())
+                : "";
+        return mon + " " + date.getDayOfMonth() + t;
+    }
+
     // ── Table helpers ─────────────────────────────────────────
 
-    /**
-     * Filters the reservations table to rows containing the query string.
-     * @param query text to search across all columns (case-insensitive)
-     */
     private void filterTable(String query) {
         tableModel.setRowCount(0);
         String q = query.toLowerCase();
-        for (Object[] row : allData) {
+        for (Object[] row : liveData) {
             boolean match = q.isEmpty();
             for (Object cell : row)
                 if (cell.toString().toLowerCase().contains(q)) { match = true; break; }
@@ -958,11 +1411,20 @@ public class AdminDashboard extends JPanel {
 
     private static class AdminActionRenderer implements TableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,
-                                                                 boolean sel, boolean focus, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
+                                                             boolean sel, boolean focus, int row, int col) {
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
             p.setBackground(sel ? Theme.CREAM : (row % 2 == 0 ? Theme.CARD : Theme.PAPER));
-            p.add(Components.outlineBtn("Edit"));
-            p.add(Components.dangerBtn("Cancel"));
+            String status = t.getValueAt(row, 6) != null ? t.getValueAt(row, 6).toString() : "";
+            if (!status.equalsIgnoreCase("Cancelled")) {
+                p.add(Components.outlineBtn("Edit"));
+                if (!status.equalsIgnoreCase("Confirmed")) {
+                    JButton confirm = Components.outlineBtn("Confirm");
+                    ((Components.RoundButton) confirm).setBorderColor(Theme.SUCCESS);
+                    confirm.setForeground(Theme.SUCCESS);
+                    p.add(confirm);
+                }
+                p.add(Components.dangerBtn("Cancel"));
+            }
             return p;
         }
     }
@@ -972,28 +1434,58 @@ public class AdminDashboard extends JPanel {
 
         @Override public Component getTableCellEditorComponent(JTable t, Object v,
                                                                boolean sel, int row, int col) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
             p.setBackground(Theme.CREAM);
-            JButton edit = Components.outlineBtn("Edit");
-            JButton can  = Components.dangerBtn("Cancel");
-            String user  = tableModel.getValueAt(row, 1).toString();
-            edit.addActionListener(e -> {
-                JOptionPane.showMessageDialog(t,
-                        "Edit dialog for " + user + " — connect to your AppointmentService.");
-                stopCellEditing();
-            });
-            can.addActionListener(e -> {
-                int r = JOptionPane.showConfirmDialog(t,
-                        "Cancel reservation for " + user + "?\nSlot will become available again.",
-                        "Admin Cancel", JOptionPane.YES_NO_OPTION);
-                if (r == JOptionPane.YES_OPTION) {
-                    tableModel.removeRow(row);
-                    JOptionPane.showMessageDialog(t, "Reservation cancelled. Slot freed.");
+            String status = tableModel.getValueAt(row, 6) != null ? tableModel.getValueAt(row, 6).toString() : "";
+            if (!status.equalsIgnoreCase("Cancelled")) {
+                String user = tableModel.getValueAt(row, 1).toString();
+
+                JButton edit = Components.outlineBtn("Edit");
+                edit.addActionListener(e -> {
+                    Appointment appt = liveAppts.get(row);
+                    stopCellEditing();
+                    showEditDialog(appt);
+                });
+                p.add(edit);
+
+                if (!status.equalsIgnoreCase("Confirmed")) {
+                    JButton confirm = Components.outlineBtn("Confirm");
+                    ((Components.RoundButton) confirm).setBorderColor(Theme.SUCCESS);
+                    confirm.setForeground(Theme.SUCCESS);
+
+                    confirm.addActionListener(e -> {
+                        int r = JOptionPane.showConfirmDialog(t,
+                                "Confirm this reservation for " + user + "?",
+                                "Admin Confirm", JOptionPane.YES_NO_OPTION);
+                        if (r == JOptionPane.YES_OPTION) {
+                            Appointment appt = liveAppts.get(row);
+                            Administrator.confirmAppointment(appt);
+                            stopCellEditing();
+                            loadTableData();
+                        } else {
+                            stopCellEditing();
+                        }
+                    });
+                    p.add(confirm);
                 }
-                stopCellEditing();
-            });
-            p.add(edit);
-            p.add(can);
+
+                JButton can = Components.dangerBtn("Cancel");
+                can.addActionListener(e -> {
+                    int r = JOptionPane.showConfirmDialog(t,
+                            "Cancel reservation for " + user + "?\nSlot will become available again.",
+                            "Admin Cancel", JOptionPane.YES_NO_OPTION);
+                    if (r == JOptionPane.YES_OPTION) {
+                        Appointment appt = liveAppts.get(row);
+                        adminObj.cancelAppointment(appt);
+                        stopCellEditing();
+                        loadTableData();
+                    } else {
+                        stopCellEditing();
+                    }
+                });
+                p.add(can);
+            }
+            //SwingUtilities.invokeLater(this::stopCellEditing);
             return p;
         }
     }

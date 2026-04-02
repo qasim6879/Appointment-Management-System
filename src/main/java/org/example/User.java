@@ -74,7 +74,7 @@ public class User {
 	public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
 	    List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
 	    Administrator admin = Administrator.getAdministratorObject(adminUsername);
-	    Appointment appt = new Appointment(this, admin, date, startTime, duration, type, AppointmentStatus.PENDING);
+	    Appointment appt = new Appointment(this, admin, date, startTime, duration, type, (this instanceof Administrator? AppointmentStatus.PENDING : AppointmentStatus.CONFIRMED));
 	    appointments.add(appt);
 	    JsonHandler.saveList(appointments, "Appointments.json");
 
@@ -104,9 +104,11 @@ public class User {
 	public ArrayList <Appointment> getUserAppointments(){
 		List <Appointment> allAppts = JsonHandler.loadList("appointments.json", Appointment.class);
 		ArrayList <Appointment> userAppts = new ArrayList <Appointment> ();
-		for (Appointment obj : allAppts){
-			if (obj.getUser().getUsername().equals(this.getUsername()))
-				userAppts.add(obj);
+		for (Appointment obj : allAppts) {
+			if (this instanceof Administrator && obj.getAdmin().getUsername().equals(this.getUsername()))
+					userAppts.add(obj);
+			else if (obj.getUser().getUsername().equals(this.getUsername()))
+					userAppts.add(obj);
 		}
 		return userAppts;
 	}
