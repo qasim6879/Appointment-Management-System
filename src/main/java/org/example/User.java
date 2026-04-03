@@ -4,124 +4,87 @@ import java.time.*;
 import java.util.*;
 
 public class User {
+    public String username;
+    public String email;
+    public String password;
+    
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
 
-	public String username;
-	public String email;
-	public String password;
-	
-	public User(String username, String email, String password) {
-		this.username = username;
-		this.email = email;
-		this.password = password;
-	}
+    public String getUsername() { return username; }
+    public void setUsername(String Username) { this.username = Username; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) { this.password = password; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
 
-	// setters:
-	public void setUsername(String Username) {
-		this.username = Username;
-	}
-	public void setEmail(String email) {
-		this.email = email;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public User() {}
 
-	// getters:
-	public String getUsername() {
-		return username;
-	}
-	public String getEmail() {
-		return email;
-	}
-	public String getPassword() {
-		return password;
-	}
+    public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
+        List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
+        Administrator admin = Administrator.getAdministratorObject(adminUsername);
+        
+        // الحالة PENDING لأن اليوزر هو من طلب
+        Appointment appt = new Appointment(this, admin, date, startTime, duration, type, AppointmentStatus.PENDING);
+        appointments.add(appt);
+        JsonHandler.saveList(appointments, "appointments.json");
 
-	public User() {
-	}
+        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
+        notifications.add(new Notification("Request sent to Admin: " + adminUsername + ". Status: Pending.", true, this, admin, NotificationType.CONFIRMATION));
+        notifications.add(new Notification("New booking request from " + this.username + " on " + date, true, admin, admin, NotificationType.REMINDER));
+        JsonHandler.saveList(notifications, "notifications.json");
+    }
 
-	public static Boolean signIn(String username, String password, String fileName ){
-		List<User> Users = JsonHandler.loadList(fileName, User.class);
+    public void cancelAppointment(Appointment appt){
+        List <Appointment> appts = JsonHandler.loadList("appointments.json", Appointment.class);
+        for(Appointment obj : appts){
+            if (obj.getAdmin().getUsername().equals(appt.getAdmin().getUsername()) && obj.getDate().equals(appt.getDate()) && obj.getStartTime().equals( appt.getStartTime())) {
+                obj.setStatus(AppointmentStatus.CANCELLED);
+                JsonHandler.saveList(appts, "appointments.json");
 
-		for (int i = 0; i < Users.size(); i++){
-			if (Users.get(i).username.equals(username) && Users.get(i).password.equals(password))
-				return true;
-		}
-		return false;
-	}
+                List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
+                String msgForUser = (this instanceof Administrator) ? "Admin cancelled your appointment on " + appt.getDate() : "You cancelled your appointment on " + appt.getDate();
+                String msgForAdmin = (this instanceof Administrator) ? "You cancelled appointment for " + appt.getUser().getUsername() : "User " + this.username + " cancelled their appointment on " + appt.getDate();
+                
+                notifications.add(new Notification(msgForUser, true, appt.getUser(), appt.getAdmin(), NotificationType.CANCELLATION));
+                notifications.add(new Notification(msgForAdmin, true, appt.getAdmin(), appt.getAdmin(), NotificationType.CANCELLATION));
+                JsonHandler.saveList(notifications, "notifications.json");
+                return;
+            }
+        }
+    }
 
-	public static int signUp(String username, String email, String password, String fileName){
-		List<User> Users = JsonHandler.loadList(fileName, User.class);
+    public static User getUserObject(String username){
+        List <User> users = JsonHandler.loadList("users.json", User.class);
+        for (User obj: users){ if (obj.getUsername().equals(username)) return obj; }
+        return null;
+    }
 
-		if (!(email.contains("@") && email.contains("."))){
-			return 2;
-		}
+    public ArrayList <Appointment> getUserAppointments(){
+        List <Appointment> allAppts = JsonHandler.loadList("appointments.json", Appointment.class);
+        ArrayList <Appointment> userAppts = new ArrayList <Appointment> ();
+        for (Appointment obj : allAppts) {
+            if (this instanceof Administrator && obj.getAdmin().getUsername().equals(this.getUsername())) userAppts.add(obj);
+            else if (obj.getUser().getUsername().equals(this.getUsername())) userAppts.add(obj);
+        }
+        return userAppts;
+    }
 
-		for (int i = 0; i < Users.size(); i++){
-			if (Users.get(i).username.equals(username))
-				return 1;
-			if (Users.get(i).email.equals(email))
-				return 2;
-		}
+    public static Boolean signIn(String username, String password, String fileName ){
+        List<User> Users = JsonHandler.loadList(fileName, User.class);
+        for (User u : Users) { if (u.username.equals(username) && u.password.equals(password)) return true; }
+        return false;
+    }
 
-		User a = new User(username, email, password);
-		Users.add(a);
-
-		JsonHandler.saveList(Users, fileName);
-		return 0;
-	}
-
-	public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
-	    List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
-	    Administrator admin = Administrator.getAdministratorObject(adminUsername);
-	    Appointment appt = new Appointment(this, admin, date, startTime, duration, type, (this instanceof Administrator? AppointmentStatus.PENDING : AppointmentStatus.CONFIRMED));
-	    appointments.add(appt);
-	    JsonHandler.saveList(appointments, "Appointments.json");
-
-	    // Create and save notification
-	    List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
-	    Notification notif = new Notification(
-	        "Your " + type.toString() + " appointment with " + adminUsername +
-	        " on " + date.toString() + " at " + startTime.toString() + " has been requested. Status: Pending.",
-	        true,
-	        this,
-	        admin,
-	        NotificationType.CONFIRMATION
-	    );
-	    notifications.add(notif);
-	    JsonHandler.saveList(notifications, "notifications.json");
-	}
-
-	public static User getUserObject(String username){
-		List <User> users = JsonHandler.loadList("users.json", User.class);
-		for (User obj: users){
-			if (obj.getUsername().equals(username))
-				return obj;
-		}
-		return null;
-	}
-
-	public ArrayList <Appointment> getUserAppointments(){
-		List <Appointment> allAppts = JsonHandler.loadList("appointments.json", Appointment.class);
-		ArrayList <Appointment> userAppts = new ArrayList <Appointment> ();
-		for (Appointment obj : allAppts) {
-			if (this instanceof Administrator && obj.getAdmin().getUsername().equals(this.getUsername()))
-					userAppts.add(obj);
-			else if (obj.getUser().getUsername().equals(this.getUsername()))
-					userAppts.add(obj);
-		}
-		return userAppts;
-	}
-
-	public void cancelAppointment(Appointment appt){
-		List <Appointment> appts = JsonHandler.loadList("appointments.json", Appointment.class);
-
-		for(Appointment obj : appts){
-			if (obj.getAdmin().getUsername().equals(appt.getAdmin().getUsername()) && obj.getDate().equals(appt.getDate()) && obj.getStartTime().equals( appt.getStartTime())) {
-				obj.setStatus(AppointmentStatus.CANCELLED);
-				JsonHandler.saveList(appts, "appointments.json");
-				return;
-			}
-		}
-	}
+    public static int signUp(String username, String email, String password, String fileName){
+        List<User> Users = JsonHandler.loadList(fileName, User.class);
+        if (!(email.contains("@") && email.contains("."))) return 2;
+        for (User u : Users) { if (u.username.equals(username)) return 1; if (u.email.equals(email)) return 2; }
+        Users.add(new User(username, email, password));
+        JsonHandler.saveList(Users, fileName);
+        return 0;
+    }
 }

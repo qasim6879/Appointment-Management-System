@@ -1,5 +1,5 @@
 package org.example;
-
+import java.util.Collections;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
@@ -170,7 +170,7 @@ public class UserDashboard extends JPanel {
         nameCol.setOpaque(false);
         JLabel nameL = new JLabel(capitalize(username));
         nameL.setFont(new Font("SansSerif", Font.BOLD, 13)); nameL.setForeground(Theme.INK);
-        JLabel roleL = new JLabel("Patient · User");
+        JLabel roleL = new JLabel("user");
         roleL.setFont(Theme.FONT_SMALL); roleL.setForeground(Theme.MUTED);
         nameCol.add(nameL); nameCol.add(roleL);
         chip.add(avatar); chip.add(nameCol);
@@ -687,12 +687,12 @@ public class UserDashboard extends JPanel {
         JLabel mark = new JLabel("Mark all read ›");
         mark.setFont(Theme.FONT_SMALL); mark.setForeground(Theme.ACCENT);
         mark.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        
         mark.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
-                List<Notification> notifs = Notification.getNotifications(username);
-                if (notifs != null)
-                    for (Notification n : notifs)
-                        n.setActive(false);
+                // حذف نهائي من الـ JSON
+                Notification.deleteAllNotifications(username);
+                // تنظيف الواجهة
                 notifsList.removeAll();
                 notifsList.revalidate();
                 notifsList.repaint();
@@ -727,6 +727,7 @@ public class UserDashboard extends JPanel {
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             notifsList.add(empty);
         } else {
+        	Collections.reverse(notifs);
             for (Notification n : notifs)
                 if (n.isActive())
                     notifsList.add(buildNotifRow(n));

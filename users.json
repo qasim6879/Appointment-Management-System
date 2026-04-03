@@ -38,5 +38,10 @@
     "username": "ali2",
     "email": "e.g. name@example.com",
     "password": "12345678"
+  },
+  {
+    "username": "jjk",
+    "email": "e.g. qasem@example.com",
+    "password": "000"
   }
 ]

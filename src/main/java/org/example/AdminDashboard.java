@@ -1,5 +1,5 @@
 package org.example;
-
+import java.util.Collections;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
@@ -890,15 +890,14 @@ public class AdminDashboard extends JPanel {
         confirmBtn.addActionListener(e -> {
             String selTime = (String) timeBox.getSelectedItem();
             if (selTime == null || selTime.startsWith("—")) {
-                JOptionPane.showMessageDialog(dialog,
-                        "Please select a valid time slot.", "Missing Field", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Please select a valid time slot.", "Missing Field", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             LocalTime newTime = LocalTime.parse(selTime);
-            int newDuration = editDuration[0];
-            AppointmentType newType = AppointmentType.valueOf(
-                    typeBox.getSelectedItem().toString().toUpperCase().replace("-", "_").replace(" ", "_"));
-            adminObj.editAppointment(appt, editDate[0], newTime, newDuration, newType);
+            int newDur = editDuration[0];
+            AppointmentType newTp = AppointmentType.valueOf(typeBox.getSelectedItem().toString().toUpperCase().replace("-", "_").replace(" ", "_"));
+            
+            adminObj.editAppointment(appt, editDate[0], newTime, newDur, newTp);
             dialog.dispose();
             loadTableData();
         });
@@ -1038,7 +1037,8 @@ public class AdminDashboard extends JPanel {
                 type.toUpperCase().replace("-", "_").replace(" ", "_")
         );
 
-        targetUserObj.bookAppointment(adminName, pickedAddDate, startTime, pickedAddDuration, apptType);
+     // التعديل هنا: نجعل الإدمن هو من يقوم بفعل الحجز وليس اليوزر
+        adminObj.bookAppointment(targetUser, pickedAddDate, startTime, pickedAddDuration, apptType);
         refreshAddSlots();
 
         JOptionPane.showMessageDialog(this,
@@ -1098,7 +1098,10 @@ public class AdminDashboard extends JPanel {
 
         mark.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
-                list.removeAll(); list.revalidate(); list.repaint();
+                Notification.deleteAllNotifications(adminName); // حذف نهائي
+                adminNotifsList.removeAll();
+                adminNotifsList.revalidate();
+                adminNotifsList.repaint();
             }
         });
 
@@ -1115,27 +1118,38 @@ public class AdminDashboard extends JPanel {
 
     private void rebuildAdminNotifs() {
         adminNotifsList.removeAll();
-        Object[][] notifs = {
-                {"⚠",  "Capacity Warning",     "Group – Assessment on Mar 22 has reached max participants (4).", "Today · 09:15",     Theme.ACCENT},
-                {"✅", "Booking Confirmed",     "Reservation #006 for Reem Haddad was confirmed successfully.",  "Today · 08:40",     Theme.SUCCESS},
-                {"🔔", "Upcoming Appointments", "4 appointments scheduled for tomorrow.",                         "Yesterday · 17:00", Theme.WARNING},
-                {"ℹ",  "Slot Freed",            "Reservation #003 cancelled. Slot Mar 15 · 14:00 is now free.",  "Yesterday · 13:22", Theme.ACCENT2}
-        };
-        for (Object[] n : notifs)
-            adminNotifsList.add(buildAdminNotifRow((String)n[0], (String)n[1], (String)n[2], (String)n[3], (Color)n[4]));
+        // جلب الإشعارات الحقيقية الخاصة بهذا الإدمن من ملف JSON
+        List<Notification> realNotifs = Notification.getNotifications(adminName);
+
+        if (realNotifs == null || realNotifs.isEmpty()) {
+            JLabel empty = new JLabel("No new notifications.");
+            empty.setFont(Theme.FONT_BODY);
+            empty.setForeground(Theme.MUTED);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            adminNotifsList.add(empty);
+        } else {
+            // ترتيب التنبيهات (الأحدث فوق)
+            Collections.reverse(realNotifs);
+            for (Notification n : realNotifs) {
+            	if (n.isActive()) {
+                    String icon = (n.getType() == NotificationType.CANCELLATION) ? "❌" : "🔔";
+                    Color accent = (n.getType() == NotificationType.CONFIRMATION) ? Theme.SUCCESS : Theme.ACCENT;
+                    
+                    // التعديل هنا: نمرر n كأول باراميتر
+                    adminNotifsList.add(buildAdminNotifRow(n, icon, accent)); 
+            	}}
+        }
         adminNotifsList.revalidate();
         adminNotifsList.repaint();
     }
 
-    private JPanel buildAdminNotifRow(String icon, String title, String body, String time, Color accent) {
+ // تعديل دالة buildAdminNotifRow (Existing Function - Changed Parameters)
+    private JPanel buildAdminNotifRow(Notification n, String icon, Color accent) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setBackground(Theme.PAPER);
         row.setBorder(BorderFactory.createCompoundBorder(
                 new MatteBorder(0, 3, 0, 0, accent),
-                BorderFactory.createCompoundBorder(
-                        new LineBorder(Theme.BORDER, 1),
-                        BorderFactory.createEmptyBorder(10, 12, 10, 12)
-                )
+                BorderFactory.createCompoundBorder(new LineBorder(Theme.BORDER, 1), BorderFactory.createEmptyBorder(10, 12, 10, 12))
         ));
 
         JLabel ico = new JLabel(icon);
@@ -1143,29 +1157,31 @@ public class AdminDashboard extends JPanel {
 
         JPanel text = new JPanel(new GridLayout(3, 1, 0, 1));
         text.setOpaque(false);
-        JLabel t  = new JLabel(title); t.setFont(new Font("SansSerif", Font.BOLD, 12)); t.setForeground(Theme.INK);
-        JLabel b  = new JLabel(body);  b.setFont(Theme.FONT_BODY);  b.setForeground(Theme.INK);
-        JLabel ts = new JLabel(time);  ts.setFont(Theme.FONT_SMALL); ts.setForeground(Theme.MUTED);
-        text.add(t); text.add(b); text.add(ts);
+        text.add(new JLabel(n.getType().toString()) {{ setFont(new Font("SansSerif", Font.BOLD, 12)); }});
+        text.add(new JLabel(n.getMessage()) {{ setFont(Theme.FONT_BODY); }});
+        text.add(new JLabel(n.getDateSent()) {{ setFont(Theme.FONT_SMALL); setForeground(Theme.MUTED); }});
 
         JButton x = new JButton("✖");
         x.setFont(new Font("SansSerif", Font.PLAIN, 20));
         x.setForeground(Color.RED);
-        x.setBackground(Theme.PAPER);
-        x.setBorderPainted(false);
-        x.setFocusPainted(false);
+        x.setBorderPainted(false);      // سطر جديد: لإزالة الإطار (المربع)
+        x.setFocusPainted(false);       // سطر جديد: لإزالة مربع التنقيط عند الضغط
+        x.setContentAreaFilled(false);  // لجعل الخلفية شفافة
+        x.setOpaque(false);             // لجعل الزر شفافاً تمام
         x.setContentAreaFilled(false);
         x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        
+        // الأكشن الجديد للحذف النهائي من JSON عند الضغط على X
         x.addActionListener(e -> {
-            Container parent = row.getParent();
-            parent.remove(row);
-            parent.revalidate();
-            parent.repaint();
+            Notification.deleteNotification(n); // حذف نهائي من JSON
+            adminNotifsList.remove(row);        // حذف من الواجهة
+            adminNotifsList.revalidate();
+            adminNotifsList.repaint();
         });
 
-        row.add(ico,  BorderLayout.WEST);
+        row.add(ico, BorderLayout.WEST);
         row.add(text, BorderLayout.CENTER);
-        row.add(x,    BorderLayout.EAST);
+        row.add(x, BorderLayout.EAST);
         return row;
     }
 
