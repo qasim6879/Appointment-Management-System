@@ -17,8 +17,8 @@ public class Email implements NotificationObserver {
             return;
         }
 
-        final String from = "momenx22005@gmail.com";
-        final String password = "hsegenctvtbmqekz";
+        final String from = "app0inteasemaq@gmail.com";
+        final String password = "shslahsbrqfnxegd";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");

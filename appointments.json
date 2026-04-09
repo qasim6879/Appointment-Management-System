@@ -34,5 +34,41 @@
     "type": "VIRTUAL",
     "status": "CANCELLED",
     "maxParticipants": 5
+  },
+  {
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "date": "2026-04-13",
+    "startTime": "12:00:00",
+    "duration": 30,
+    "type": "VIRTUAL",
+    "status": "PENDING",
+    "maxParticipants": 5
+  },
+  {
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "date": "2026-04-22",
+    "startTime": "09:30:00",
+    "duration": 30,
+    "type": "FOLLOW_UP",
+    "status": "PENDING",
+    "maxParticipants": 3
   }
 ]
