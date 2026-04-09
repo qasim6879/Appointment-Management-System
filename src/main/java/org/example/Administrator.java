@@ -14,19 +14,12 @@ public class Administrator extends User {
         List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
         User targetUser = User.getUserObject(userUsername);
 
-        // حجز مؤكد تلقائياً لأن الإدمن هو من قام به
         Appointment appt = new Appointment(targetUser, this, date, startTime, duration, type, AppointmentStatus.CONFIRMED);
         appointments.add(appt);
         JsonHandler.saveList(appointments, "appointments.json");
 
-        // إرسال إشعارين لملف JSON
-        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
-        // 1. نسخة لليوزر
-        notifications.add(new Notification("Administrator " + this.getUsername() + " has booked an appointment for you on " + date, true, targetUser, this, NotificationType.CONFIRMATION));
-        // 2. نسخة للإدمن
-        notifications.add(new Notification("You have booked an appointment for user: " + userUsername, true, this, this, NotificationType.CONFIRMATION));
-        
-        JsonHandler.saveList(notifications, "notifications.json");
+        Notification.addNotification("Administrator " + this.getUsername() + " has booked an appointment for you on " + date, targetUser, this, NotificationType.CONFIRMATION);
+        Notification.addNotification("You have booked an appointment for user: " + userUsername, this, this, NotificationType.CONFIRMATION);
     }
 
     public void editAppointment(Appointment appt, LocalDate newDate, LocalTime newTime, int newDuration, AppointmentType newType) {
@@ -43,10 +36,9 @@ public class Administrator extends User {
         }
         JsonHandler.saveList(allAppointments, "appointments.json");
 
-        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
-        notifications.add(new Notification("Admin updated your appointment to: " + newDate + " at " + newTime, true, appt.getUser(), this, NotificationType.CONFIRMATION));
-        notifications.add(new Notification("You updated appointment for " + appt.getUser().getUsername(), true, this, this, NotificationType.CONFIRMATION));
-        JsonHandler.saveList(notifications, "notifications.json");
+        ObserverManager.notifyObservers("Admin updated your appointment to: " + newDate + " at " + newTime, appt.getUser(), this, NotificationType.CONFIRMATION);
+        ObserverManager.notifyObservers("You updated appointment for " + appt.getUser().getUsername(), this, this, NotificationType.CONFIRMATION);
+
     }
 
     public static void confirmAppointment(Appointment appt) {
@@ -60,10 +52,8 @@ public class Administrator extends User {
         }
         JsonHandler.saveList(allAppointments, "appointments.json");
 
-        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
-        notifications.add(new Notification("Admin confirmed your appointment on " + appt.getDate(), true, appt.getUser(), appt.getAdmin(), NotificationType.CONFIRMATION));
-        notifications.add(new Notification("You confirmed appointment for " + appt.getUser().getUsername(), true, appt.getAdmin(), appt.getAdmin(), NotificationType.CONFIRMATION));
-        JsonHandler.saveList(notifications, "notifications.json");
+        ObserverManager.notifyObservers("Admin confirmed your appointment on " + appt.getDate(),appt.getUser(),appt.getAdmin(), NotificationType.CONFIRMATION);
+        ObserverManager.notifyObservers("You confirmed appointment for " + appt.getUser().getUsername(), appt.getAdmin(), appt.getAdmin(), NotificationType.CONFIRMATION);
     }
 
     public static Administrator getAdministratorObject(String username) {

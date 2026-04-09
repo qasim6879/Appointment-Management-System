@@ -26,16 +26,13 @@ public class User {
     public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
         List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
         Administrator admin = Administrator.getAdministratorObject(adminUsername);
-        
-        // الحالة PENDING لأن اليوزر هو من طلب
+
         Appointment appt = new Appointment(this, admin, date, startTime, duration, type, AppointmentStatus.PENDING);
         appointments.add(appt);
         JsonHandler.saveList(appointments, "appointments.json");
 
-        List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
-        notifications.add(new Notification("Request sent to Admin: " + adminUsername + ". Status: Pending.", true, this, admin, NotificationType.CONFIRMATION));
-        notifications.add(new Notification("New booking request from " + this.username + " on " + date, true, admin, admin, NotificationType.REMINDER));
-        JsonHandler.saveList(notifications, "notifications.json");
+        ObserverManager.notifyObservers("Request sent to Admin: " + adminUsername + ". Status: Pending.", this, admin, NotificationType.CONFIRMATION);
+        ObserverManager.notifyObservers("New booking request from " + this.username + " on " + date, admin, admin, NotificationType.REMINDER);
     }
 
     public void cancelAppointment(Appointment appt){
@@ -45,13 +42,12 @@ public class User {
                 obj.setStatus(AppointmentStatus.CANCELLED);
                 JsonHandler.saveList(appts, "appointments.json");
 
-                List<Notification> notifications = JsonHandler.loadList("notifications.json", Notification.class);
                 String msgForUser = (this instanceof Administrator) ? "Admin cancelled your appointment on " + appt.getDate() : "You cancelled your appointment on " + appt.getDate();
                 String msgForAdmin = (this instanceof Administrator) ? "You cancelled appointment for " + appt.getUser().getUsername() : "User " + this.username + " cancelled their appointment on " + appt.getDate();
-                
-                notifications.add(new Notification(msgForUser, true, appt.getUser(), appt.getAdmin(), NotificationType.CANCELLATION));
-                notifications.add(new Notification(msgForAdmin, true, appt.getAdmin(), appt.getAdmin(), NotificationType.CANCELLATION));
-                JsonHandler.saveList(notifications, "notifications.json");
+
+                ObserverManager.notifyObservers(msgForUser, appt.getUser(), appt.getAdmin(), NotificationType.CANCELLATION);
+                ObserverManager.notifyObservers(msgForAdmin, appt.getAdmin(), appt.getAdmin(), NotificationType.CANCELLATION);
+
                 return;
             }
         }

@@ -5,6 +5,10 @@ import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
+
+        ObserverManager.addObserver(new Notification());
+        ObserverManager.addObserver(new Email());
+
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("AppointEase");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
