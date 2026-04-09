@@ -1,98 +1,26 @@
 [
   {
     "user": {
-      "username": "jjk",
-      "email": "e.g. qasem@example.com",
-      "password": "000"
+      "username": "momen saleh",
+      "email": "s12324285@gmail.com",
+      "password": "momen saleh"
     },
     "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
     },
-    "date": "2026-04-05",
-    "startTime": "09:00:00",
-    "duration": 30,
-    "type": "IN_PERSON",
-    "status": "CONFIRMED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "jjk",
-      "email": "e.g. qasem@example.com",
-      "password": "000"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "date": "2026-04-05",
+    "date": "2026-04-29",
     "startTime": "09:30:00",
-    "duration": 30,
-    "type": "IN_PERSON",
-    "status": "CANCELLED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "momen",
-      "email": "momen@gmail.com",
-      "password": "111"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "date": "2026-04-08",
-    "startTime": "12:30:00",
-    "duration": 30,
-    "type": "FOLLOW_UP",
-    "status": "CONFIRMED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "momen",
-      "email": "momen@gmail.com",
-      "password": "111"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "date": "2026-04-13",
-    "startTime": "12:00:00",
     "duration": 60,
-    "type": "VIRTUAL",
-    "status": "PENDING",
-    "maxParticipants": 5
-  },
-  {
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "date": "2026-04-22",
-    "startTime": "12:30:00",
-    "duration": 30,
-    "type": "VIRTUAL",
+    "type": "ASSESSMENT",
     "status": "CANCELLED",
-    "maxParticipants": 5
+    "maxParticipants": 3
   },
   {
     "user": {
       "username": "momen saleh",
-      "email": "s12324285@gmail.com",
+      "email": "s12324285@stu.najah.edu",
       "password": "momen saleh"
     },
     "admin": {
@@ -100,44 +28,8 @@
       "email": "adrian@gmail.com",
       "password": "999"
     },
-    "date": "2026-04-16",
-    "startTime": "12:00:00",
-    "duration": 60,
-    "type": "IN_PERSON",
-    "status": "CANCELLED",
-    "maxParticipants": 3
-  },
-  {
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "date": "2026-04-16",
+    "date": "2026-04-15",
     "startTime": "12:30:00",
-    "duration": 60,
-    "type": "VIRTUAL",
-    "status": "CANCELLED",
-    "maxParticipants": 5
-  },
-  {
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "date": "2026-04-16",
-    "startTime": "11:30:00",
     "duration": 60,
     "type": "VIRTUAL",
     "status": "CANCELLED",

@@ -318,5 +318,165 @@
       "password": "888"
     },
     "type": "CANCELLATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:27:10",
+    "message": "Request sent to Admin: adrian. Status: Pending.",
+    "active": true,
+    "user": {
+      "username": "emeiltest",
+      "email": "momenx32005@gmail.com",
+      "password": "089"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:27:15",
+    "message": "New booking request from emeiltest on 2026-04-13",
+    "active": true,
+    "user": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "REMINDER"
+  },
+  {
+    "dateSent": "2026-04-09 22:32:18",
+    "message": "Request sent to Admin: adrian. Status: Pending.",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@gmail.com",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:32:32",
+    "message": "New booking request from momen saleh on 2026-04-29",
+    "active": true,
+    "user": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "REMINDER"
+  },
+  {
+    "dateSent": "2026-04-09 22:35:24",
+    "message": "You cancelled your appointment on 2026-04-29",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@gmail.com",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CANCELLATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:35:27",
+    "message": "User momen saleh cancelled their appointment on 2026-04-29",
+    "active": true,
+    "user": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CANCELLATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:37:00",
+    "message": "Request sent to Admin: adrian. Status: Pending.",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:37:02",
+    "message": "New booking request from momen saleh on 2026-04-15",
+    "active": true,
+    "user": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "REMINDER"
+  },
+  {
+    "dateSent": "2026-04-09 22:39:37",
+    "message": "You cancelled your appointment on 2026-04-15",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CANCELLATION"
+  },
+  {
+    "dateSent": "2026-04-09 22:39:54",
+    "message": "User momen saleh cancelled their appointment on 2026-04-15",
+    "active": true,
+    "user": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "admin": {
+      "username": "adrian",
+      "email": "adrian@gmail.com",
+      "password": "999"
+    },
+    "type": "CANCELLATION"
   }
 ]

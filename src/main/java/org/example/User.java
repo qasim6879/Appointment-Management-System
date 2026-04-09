@@ -3,26 +3,52 @@ package org.example;
 import java.time.*;
 import java.util.*;
 
+/**
+ * This class represents a user in the system.
+ * A user can book and cancel appointments, view their appointments,
+ * and sign in or sign up.
+ */
 public class User {
     public String username;
     public String email;
     public String password;
-    
+
+    /**
+     * Creates a new user with basic info.
+     */
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
     }
 
+    /** Returns the username */
     public String getUsername() { return username; }
+
+    /** Sets the username */
     public void setUsername(String Username) { this.username = Username; }
+
+    /** Sets the email */
     public void setEmail(String email) { this.email = email; }
+
+    /** Sets the password */
     public void setPassword(String password) { this.password = password; }
+
+    /** Returns the email */
     public String getEmail() { return email; }
+
+    /** Returns the password */
     public String getPassword() { return password; }
 
+    /**
+     * Empty constructor (used for JSON loading).
+     */
     public User() {}
 
+    /**
+     * Books an appointment with an admin.
+     * Saves it as PENDING and sends notifications.
+     */
     public void bookAppointment(String adminUsername, LocalDate date, LocalTime startTime, int duration, AppointmentType type){
         List<Appointment> appointments = JsonHandler.loadList("appointments.json", Appointment.class);
         Administrator admin = Administrator.getAdministratorObject(adminUsername);
@@ -35,6 +61,10 @@ public class User {
         ObserverManager.notifyObservers("New booking request from " + this.username + " on " + date, admin, admin, NotificationType.REMINDER);
     }
 
+    /**
+     * Cancels an appointment and updates its status.
+     * Sends notifications to both user and admin.
+     */
     public void cancelAppointment(Appointment appt){
         List <Appointment> appts = JsonHandler.loadList("appointments.json", Appointment.class);
         for(Appointment obj : appts){
@@ -53,12 +83,18 @@ public class User {
         }
     }
 
+    /**
+     * Finds and returns a user by username.
+     */
     public static User getUserObject(String username){
         List <User> users = JsonHandler.loadList("users.json", User.class);
         for (User obj: users){ if (obj.getUsername().equals(username)) return obj; }
         return null;
     }
 
+    /**
+     * Returns all appointments related to this user.
+     */
     public ArrayList <Appointment> getUserAppointments(){
         List <Appointment> allAppts = JsonHandler.loadList("appointments.json", Appointment.class);
         ArrayList <Appointment> userAppts = new ArrayList <Appointment> ();
@@ -69,12 +105,18 @@ public class User {
         return userAppts;
     }
 
+    /**
+     * Checks if username and password match a stored user.
+     */
     public static Boolean signIn(String username, String password, String fileName ){
         List<User> Users = JsonHandler.loadList(fileName, User.class);
         for (User u : Users) { if (u.username.equals(username) && u.password.equals(password)) return true; }
         return false;
     }
 
+    /**
+     * Registers a new user if username and email are valid and unique.
+     */
     public static int signUp(String username, String email, String password, String fileName){
         List<User> Users = JsonHandler.loadList(fileName, User.class);
         if (!(email.contains("@") && email.contains("."))) return 2;

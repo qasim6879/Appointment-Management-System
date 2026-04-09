@@ -36,8 +36,8 @@ public class Email implements NotificationObserver {
             Message msg = new MimeMessage(session);
             msg.setFrom(new InternetAddress(from));
             msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
-            msg.setSubject("appointment management");
-            msg.setText(messageText);
+            msg.setSubject("AppointEase");
+            msg.setText("Hope this email finds you well, This is from your AppointEase Application\n\n\n" + messageText);
 
             Transport.send(msg);
 

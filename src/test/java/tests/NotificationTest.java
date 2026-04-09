@@ -104,6 +104,53 @@ public class NotificationTest {
     }
 
     @Test
+    void testAddNotification() {
+        JsonHandler.saveList(new ArrayList<>(), "notifications.json");
+
+        Notification.addNotification(
+                "Hello",
+                testUser1,
+                testAdmin,
+                NotificationType.CONFIRMATION
+        );
+
+        List<Notification> list =
+                JsonHandler.loadList("notifications.json", Notification.class);
+
+        assertEquals(1, list.size());
+        assertEquals("Hello", list.get(0).getMessage());
+        assertEquals("user1", list.get(0).getUser().getUsername());
+    }
+
+    @Test
+    void testAddMultipleNotifications() {
+        JsonHandler.saveList(new ArrayList<>(), "notifications.json");
+
+        Notification.addNotification("A", testUser1, testAdmin, NotificationType.CONFIRMATION);
+        Notification.addNotification("B", testUser1, testAdmin, NotificationType.REMINDER);
+
+        List<Notification> list =
+                JsonHandler.loadList("notifications.json", Notification.class);
+
+        assertEquals(2, list.size());
+    }
+
+    @Test
+    void testAddNotificationDifferentUsers() {
+        JsonHandler.saveList(new ArrayList<>(), "notifications.json");
+
+        Notification.addNotification("U1", testUser1, testAdmin, NotificationType.CONFIRMATION);
+        Notification.addNotification("U2", testUser2, testAdmin, NotificationType.CONFIRMATION);
+
+        List<Notification> list =
+                JsonHandler.loadList("notifications.json", Notification.class);
+
+        assertEquals(2, list.size());
+        assertEquals("user1", list.get(0).getUser().getUsername());
+        assertEquals("user2", list.get(1).getUser().getUsername());
+    }
+
+    @Test
     @DisplayName("Test deleteNotification with non-existent notification")
     void testDeleteNonExistent() {
         Notification n1 = new Notification("Exist", true, testUser1, testAdmin, NotificationType.CONFIRMATION);
