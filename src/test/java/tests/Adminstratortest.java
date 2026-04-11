@@ -1,6 +1,6 @@
 package tests;
 
-import org.example.*; // هذا السطر ضروري جداً لكي يجلب الكلاسات من مشروعك
+import org.example.*;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;

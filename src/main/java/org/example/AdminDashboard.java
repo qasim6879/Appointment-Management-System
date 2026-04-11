@@ -32,7 +32,6 @@ public class AdminDashboard extends JPanel {
     private static final String CARD_RESERVATIONS = "RESERVATIONS";
     private static final String CARD_ADD          = "ADD_APPOINTMENT";
     private static final String CARD_NOTIFS       = "NOTIFICATIONS";
-    private static final String CARD_REPORTS      = "REPORTS";
 
     private static final Color ADMIN_BG    = new Color(0x1A, 0x0E, 0x0A);
     private static final Color SLOT_BOOKED = Theme.CREAM;
@@ -54,7 +53,6 @@ public class AdminDashboard extends JPanel {
     private JButton btnReservations;
     private JButton btnAdd;
     private JButton btnNotifs;
-    private JButton btnReports;
 
     private JPanel statsPanel;
     // Add-appointment form fields
@@ -90,7 +88,6 @@ public class AdminDashboard extends JPanel {
         contentPanel.add(wrapScrollable(buildReservationsView()),   CARD_RESERVATIONS);
         contentPanel.add(wrapScrollable(buildAddAppointmentView()), CARD_ADD);
         contentPanel.add(wrapScrollable(buildNotificationsView()),  CARD_NOTIFS);
-        contentPanel.add(wrapScrollable(buildReportsView()),        CARD_REPORTS);
 
         add(buildSidebar(), BorderLayout.WEST);
         add(buildMain(),    BorderLayout.CENTER);
@@ -123,17 +120,14 @@ public class AdminDashboard extends JPanel {
         btnReservations = mkSideBtn("📋", "All Reservations");
         btnAdd          = mkSideBtn("➕", "Add Appointment");
         btnNotifs       = mkSideBtn("🔔", "Notifications");
-        btnReports      = mkSideBtn("📊", "Reports");
 
         btnReservations.addActionListener(e -> { loadTableData(); switchTo(CARD_RESERVATIONS); });
         btnAdd.addActionListener(e          -> switchTo(CARD_ADD));
         btnNotifs.addActionListener(e -> { switchTo(CARD_NOTIFS); rebuildAdminNotifs(); });
-        btnReports.addActionListener(e      -> switchTo(CARD_REPORTS));
 
         side.add(btnReservations);
         side.add(btnAdd);
         side.add(btnNotifs);
-        side.add(btnReports);
 
         JButton logout = mkSideBtn("🚪", "Log out");
         logout.setForeground(Theme.ACCENT);
@@ -154,12 +148,11 @@ public class AdminDashboard extends JPanel {
             case CARD_RESERVATIONS: setActive(btnReservations); break;
             case CARD_ADD:          setActive(btnAdd);          break;
             case CARD_NOTIFS:       setActive(btnNotifs);       break;
-            case CARD_REPORTS:      setActive(btnReports);      break;
         }
     }
 
     private void setActive(JButton active) {
-        for (JButton b : new JButton[]{btnReservations, btnAdd, btnNotifs, btnReports}) {
+        for (JButton b : new JButton[]{btnReservations, btnAdd, btnNotifs}) {
             boolean on = (b == active);
             b.putClientProperty("active", on);
             b.setBackground(on ? Theme.ACCENT : ADMIN_BG);
@@ -654,7 +647,7 @@ public class AdminDashboard extends JPanel {
             addSlotBtns.get(i).setForeground(available[i] ? Theme.INK : Theme.MUTED);
         }
     }
-    
+
     private void showEditDialog(Appointment appt) {
         Window owner = SwingUtilities.getWindowAncestor(this);
         JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Edit Appointment", true);
@@ -896,7 +889,7 @@ public class AdminDashboard extends JPanel {
             LocalTime newTime = LocalTime.parse(selTime);
             int newDur = editDuration[0];
             AppointmentType newTp = AppointmentType.valueOf(typeBox.getSelectedItem().toString().toUpperCase().replace("-", "_").replace(" ", "_"));
-            
+
             adminObj.editAppointment(appt, editDate[0], newTime, newDur, newTp);
             dialog.dispose();
             loadTableData();
@@ -1134,9 +1127,9 @@ public class AdminDashboard extends JPanel {
             	if (n.isActive()) {
                     String icon = (n.getType() == NotificationType.CANCELLATION) ? "❌" : "🔔";
                     Color accent = (n.getType() == NotificationType.CONFIRMATION) ? Theme.SUCCESS : Theme.ACCENT;
-                    
+
                     // التعديل هنا: نمرر n كأول باراميتر
-                    adminNotifsList.add(buildAdminNotifRow(n, icon, accent)); 
+                    adminNotifsList.add(buildAdminNotifRow(n, icon, accent));
             	}}
         }
         adminNotifsList.revalidate();
@@ -1170,7 +1163,7 @@ public class AdminDashboard extends JPanel {
         x.setOpaque(false);             // لجعل الزر شفافاً تمام
         x.setContentAreaFilled(false);
         x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        
+
         // الأكشن الجديد للحذف النهائي من JSON عند الضغط على X
         x.addActionListener(e -> {
             Notification.deleteNotification(n); // حذف نهائي من JSON
@@ -1183,68 +1176,6 @@ public class AdminDashboard extends JPanel {
         row.add(text, BorderLayout.CENTER);
         row.add(x, BorderLayout.EAST);
         return row;
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 4 — REPORTS (placeholder)
-    // ══════════════════════════════════════════════════════════
-
-    private JPanel buildReportsView() {
-        JPanel view = new JPanel();
-        view.setBackground(Theme.PAPER);
-        view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
-        view.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
-
-        JLabel heading = new JLabel("Reports");
-        heading.setFont(new Font("Serif", Font.BOLD, 22));
-        heading.setForeground(Theme.INK);
-        heading.setAlignmentX(LEFT_ALIGNMENT);
-
-        JLabel sub = Components.subtitle("Appointment statistics and summaries will be available here.");
-        sub.setAlignmentX(LEFT_ALIGNMENT);
-
-        view.add(heading);
-        view.add(Box.createVerticalStrut(4));
-        view.add(sub);
-        view.add(Box.createVerticalStrut(24));
-
-        JPanel stats = new JPanel(new GridLayout(1, 3, 12, 0));
-        stats.setOpaque(false);
-        stats.setAlignmentX(LEFT_ALIGNMENT);
-        stats.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
-        stats.add(Components.statCard("42",  "Total appointments this month", Theme.ACCENT2));
-        stats.add(Components.statCard("87%", "Confirmed rate",                Theme.SUCCESS));
-        stats.add(Components.statCard("3",   "Cancellations this week",       Theme.ACCENT));
-        view.add(stats);
-        view.add(Box.createVerticalStrut(20));
-
-        JPanel card = Components.card();
-        card.setLayout(new BorderLayout(0, 12));
-        card.setAlignmentX(LEFT_ALIGNMENT);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
-
-        JLabel cardTitle = new JLabel("DETAILED REPORTS");
-        cardTitle.setFont(Theme.FONT_LABEL);
-        cardTitle.setForeground(Theme.MUTED);
-        card.add(cardTitle, BorderLayout.NORTH);
-
-        JLabel placeholder = new JLabel(
-                "<html><div style='text-align:center;padding:40px'>"
-                        + "<div style='font-size:32px'>📊</div><br><br>"
-                        + "<b>Coming soon</b><br><br>"
-                        + "Charts, export options, and detailed breakdowns<br>"
-                        + "by appointment type, user, and time period<br>"
-                        + "will be designed after project completion."
-                        + "</div></html>"
-        );
-        placeholder.setHorizontalAlignment(SwingConstants.CENTER);
-        placeholder.setFont(Theme.FONT_BODY);
-        placeholder.setForeground(Theme.MUTED);
-        card.add(placeholder, BorderLayout.CENTER);
-
-        view.add(card);
-        view.add(Box.createVerticalStrut(24));
-        return view;
     }
 
     // ── Form helpers ──────────────────────────────────────────
@@ -1300,7 +1231,7 @@ public class AdminDashboard extends JPanel {
             for (Object[] row : liveData)
                 tableModel.addRow(row);
         }
-        
+
         refreshStats();
     }
 
@@ -1501,7 +1432,6 @@ public class AdminDashboard extends JPanel {
                 });
                 p.add(can);
             }
-            //SwingUtilities.invokeLater(this::stopCellEditing);
             return p;
         }
     }

@@ -16,22 +16,6 @@
     "type": "CANCELLATION"
   },
   {
-    "dateSent": "2026-04-04 21:59:10",
-    "message": "You cancelled appointment for jjk",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
     "dateSent": "2026-04-09 21:04:02",
     "message": "Request sent to Admin: adrian. Status: Pending.",
     "active": true,
@@ -64,86 +48,6 @@
     "type": "REMINDER"
   },
   {
-    "dateSent": "2026-04-09 21:05:58",
-    "message": "Request sent to Admin: victor. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:06:00",
-    "message": "New booking request from momen saleh on 2026-04-22",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 21:12:55",
-    "message": "You cancelled your appointment on 2026-04-22",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:12:57",
-    "message": "User momen saleh cancelled their appointment on 2026-04-22",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:19:10",
-    "message": "Request sent to Admin: adrian. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
     "dateSent": "2026-04-09 21:19:12",
     "message": "New booking request from momen saleh on 2026-04-16",
     "active": true,
@@ -160,22 +64,6 @@
     "type": "REMINDER"
   },
   {
-    "dateSent": "2026-04-09 21:20:46",
-    "message": "You cancelled your appointment on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CANCELLATION"
-  },
-  {
     "dateSent": "2026-04-09 21:20:47",
     "message": "User momen saleh cancelled their appointment on 2026-04-16",
     "active": true,
@@ -188,134 +76,6 @@
       "username": "adrian",
       "email": "adrian@gmail.com",
       "password": "999"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:22:14",
-    "message": "Request sent to Admin: victor. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:22:15",
-    "message": "New booking request from momen saleh on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 21:26:45",
-    "message": "Request sent to Admin: victor. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:26:46",
-    "message": "New booking request from momen saleh on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 21:38:10",
-    "message": "You cancelled your appointment on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:38:12",
-    "message": "User momen saleh cancelled their appointment on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:45:53",
-    "message": "You cancelled your appointment on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CANCELLATION"
-  },
-  {
-    "dateSent": "2026-04-09 21:45:55",
-    "message": "User momen saleh cancelled their appointment on 2026-04-16",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
     },
     "type": "CANCELLATION"
   },
@@ -352,22 +112,6 @@
     "type": "REMINDER"
   },
   {
-    "dateSent": "2026-04-09 22:32:18",
-    "message": "Request sent to Admin: adrian. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
     "dateSent": "2026-04-09 22:32:32",
     "message": "New booking request from momen saleh on 2026-04-29",
     "active": true,
@@ -382,22 +126,6 @@
       "password": "999"
     },
     "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 22:35:24",
-    "message": "You cancelled your appointment on 2026-04-29",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@gmail.com",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CANCELLATION"
   },
   {
     "dateSent": "2026-04-09 22:35:27",
@@ -416,22 +144,6 @@
     "type": "CANCELLATION"
   },
   {
-    "dateSent": "2026-04-09 22:37:00",
-    "message": "Request sent to Admin: adrian. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@stu.najah.edu",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
     "dateSent": "2026-04-09 22:37:02",
     "message": "New booking request from momen saleh on 2026-04-15",
     "active": true,
@@ -446,22 +158,6 @@
       "password": "999"
     },
     "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 22:39:37",
-    "message": "You cancelled your appointment on 2026-04-15",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@stu.najah.edu",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "adrian",
-      "email": "adrian@gmail.com",
-      "password": "999"
-    },
-    "type": "CANCELLATION"
   },
   {
     "dateSent": "2026-04-09 22:39:54",
@@ -480,70 +176,6 @@
     "type": "CANCELLATION"
   },
   {
-    "dateSent": "2026-04-09 23:26:26",
-    "message": "Request sent to Admin: victor. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@stu.najah.edu",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
-    "dateSent": "2026-04-09 23:26:26",
-    "message": "New booking request from momen saleh on 2026-04-13",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "REMINDER"
-  },
-  {
-    "dateSent": "2026-04-09 23:26:54",
-    "message": "Request sent to Admin: victor. Status: Pending.",
-    "active": true,
-    "user": {
-      "username": "momen saleh",
-      "email": "s12324285@stu.najah.edu",
-      "password": "momen saleh"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "CONFIRMATION"
-  },
-  {
-    "dateSent": "2026-04-09 23:27:04",
-    "message": "New booking request from momen saleh on 2026-04-22",
-    "active": true,
-    "user": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "admin": {
-      "username": "victor",
-      "email": "victor@gmail.com",
-      "password": "888"
-    },
-    "type": "REMINDER"
-  },
-  {
     "dateSent": "2026-04-10 07:26:02",
     "message": "Request sent to Admin: victor. Status: Pending.",
     "active": true,
@@ -560,8 +192,40 @@
     "type": "CONFIRMATION"
   },
   {
-    "dateSent": "2026-04-10 07:26:07",
-    "message": "New booking request from Ali on 2026-04-23",
+    "dateSent": "2026-04-11 11:54:47",
+    "message": "You cancelled your appointment on 2026-04-13",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "type": "CANCELLATION"
+  },
+  {
+    "dateSent": "2026-04-11 11:56:56",
+    "message": "Admin booked an appointment for you on 2026-04-21",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-11 11:56:56",
+    "message": "You booked an appointment for momen saleh",
     "active": true,
     "user": {
       "username": "victor",
@@ -573,6 +237,22 @@
       "email": "victor@gmail.com",
       "password": "888"
     },
-    "type": "REMINDER"
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-11 11:57:22",
+    "message": "Appointment confirmed on 2026-04-13",
+    "active": true,
+    "user": {
+      "username": "momen saleh",
+      "email": "s12324285@stu.najah.edu",
+      "password": "momen saleh"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "type": "CONFIRMATION"
   }
 ]
