@@ -35,7 +35,7 @@ public class NotificationTest {
 
     @BeforeEach
     void setup() {
-        // تنظيف ملف الإشعارات قبل كل فحص
+        
         JsonHandler.saveList(new ArrayList<>(), "notifications.json");
 
         testUser1 = new User("user1", "u1@test.com", "123");
@@ -83,7 +83,7 @@ public class NotificationTest {
         list.add(n2);
         JsonHandler.saveList(list, "notifications.json");
 
-        // حذف الإشعار الأول فقط
+        
         Notification.deleteNotification(n1);
 
         List<Notification> remaining = JsonHandler.loadList("notifications.json", Notification.class);
@@ -100,7 +100,7 @@ public class NotificationTest {
         list.add(new Notification("U2 Note C", true, testUser2, testAdmin, NotificationType.CONFIRMATION));
         JsonHandler.saveList(list, "notifications.json");
 
-        // حذف كل إشعارات User 1
+        
         Notification.deleteAllNotifications("user1");
 
         List<Notification> afterDelete = JsonHandler.loadList("notifications.json", Notification.class);
@@ -165,14 +165,14 @@ public class NotificationTest {
         list.add(n1);
         JsonHandler.saveList(list, "notifications.json");
 
-        // محاولة حذف إشعار غير موجود في الملف
+        
         Notification.deleteNotification(n2);
 
         List<Notification> remaining = JsonHandler.loadList("notifications.json", Notification.class);
         assertEquals(1, remaining.size(), "List should remain unchanged");
     }
 
-    // دوال المساعدة للباك أب
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {
@@ -189,9 +189,9 @@ public class NotificationTest {
     }
     
     
- // ─────────────────────────────────────────────
-    // Mockito Tests
-    // ─────────────────────────────────────────────
+ 
+    
+    
 
     @Test
     @DisplayName("Mock observer receives correct notification message")

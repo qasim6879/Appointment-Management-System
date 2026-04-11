@@ -1,6 +1,6 @@
 package tests;
 
-import org.example.*; // استيراد كلاسات المشروع
+import org.example.*; 
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +16,7 @@ import java.util.List;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UserTest {
 
-    // المتغيرات لحفظ النسخ الاحتياطية للملفات الحقيقية
+    
     private String backupAdmins = "[]";
     private String backupUsers = "[]";
     private String backupAppointments = "[]";
@@ -27,7 +27,7 @@ public class UserTest {
 
     @BeforeAll
     void backupRealData() {
-        // أخذ نسخة من الملفات الحقيقية قبل بدء التست لحمايتها
+        
         backupAdmins = readFileSafe("admins.json");
         backupUsers = readFileSafe("users.json");
         backupAppointments = readFileSafe("appointments.json");
@@ -36,7 +36,7 @@ public class UserTest {
 
     @AfterAll
     void restoreRealData() {
-        // إرجاع الملفات الحقيقية بعد انتهاء جميع الفحوصات
+        
         writeFileSafe("admins.json", backupAdmins);
         writeFileSafe("users.json", backupUsers);
         writeFileSafe("appointments.json", backupAppointments);
@@ -45,17 +45,17 @@ public class UserTest {
 
     @BeforeEach
     void setupTestEnvironment() {
-        // 1. تفريغ الملفات الحركية لبيئة فحص نظيفة
+        
         JsonHandler.saveList(new ArrayList<>(), "appointments.json");
         JsonHandler.saveList(new ArrayList<>(), "notifications.json");
 
-        // 2. إنشاء "أدمن" وهمي للفحص
+        
         List<Administrator> admins = new ArrayList<>();
         testAdmin = new Administrator("adminTest", "admin@test.com", "123");
         admins.add(testAdmin);
         JsonHandler.saveList(admins, "admins.json");
 
-        // 3. إنشاء "مستخدم" وهمي للفحص
+        
         List<User> users = new ArrayList<>();
         testUser = new User("userTest", "user@test.com", "123");
         users.add(testUser);
@@ -97,7 +97,7 @@ public class UserTest {
         LocalDate date = LocalDate.of(2025, 5, 10);
         LocalTime time = LocalTime.of(10, 0);
 
-        // اليوزر يطلب حجز
+        
         testUser.bookAppointment("adminTest", date, time, 30, AppointmentType.VIRTUAL);
 
         List<Appointment> appts = JsonHandler.loadList("appointments.json", Appointment.class);
@@ -105,13 +105,13 @@ public class UserTest {
         assertEquals(AppointmentStatus.PENDING, appts.get(0).getStatus(), "User booking should be PENDING");
 
         List<Notification> notifs = JsonHandler.loadList("notifications.json", Notification.class);
-        //assertEquals(2, notifs.size(), "Booking should create 2 notifications");
+        
     }
 
     @Test
     @DisplayName("Test cancelAppointment by User")
     void testCancelAppointment() {
-        // إنشاء حجز أولاً
+        
         LocalDate date = LocalDate.of(2025, 5, 10);
         LocalTime time = LocalTime.of(10, 0);
         testUser.bookAppointment("adminTest", date, time, 30, AppointmentType.VIRTUAL);
@@ -119,17 +119,17 @@ public class UserTest {
         List<Appointment> appts = JsonHandler.loadList("appointments.json", Appointment.class);
         Appointment apptToCancel = appts.get(0);
         
-        // تفريغ الإشعارات الناتجة عن الحجز لكي نفحص إشعارات الإلغاء فقط
+        
         JsonHandler.saveList(new ArrayList<>(), "notifications.json");
 
-        // اليوزر يلغي الحجز
+        
         testUser.cancelAppointment(apptToCancel);
 
         List<Appointment> updatedAppts = JsonHandler.loadList("appointments.json", Appointment.class);
         assertEquals(AppointmentStatus.CANCELLED, updatedAppts.get(0).getStatus(), "Status should be CANCELLED");
 
         List<Notification> notifs = JsonHandler.loadList("notifications.json", Notification.class);
-        //assertEquals(2, notifs.size(), "Cancellation should create 2 notifications");
+        
     }
 
     @Test
@@ -155,25 +155,25 @@ public class UserTest {
     @Test
     @DisplayName("Test signUp method")
     void testSignUp() {
-        // فحص إنشاء حساب صحيح (يجب أن يرجع 0)
+        
         int resultValid = User.signUp("newUser", "new@test.com", "pass", "users.json");
         assertEquals(0, resultValid, "Valid signup should return 0");
         assertTrue(User.signIn("newUser", "pass", "users.json"), "New user should be able to sign in");
 
-        // فحص إيميل خاطئ لا يحتوي على @ أو . (يجب أن يرجع 2)
+        
         int resultInvalidEmail = User.signUp("user2", "bademail", "pass", "users.json");
         assertEquals(2, resultInvalidEmail, "Invalid email format should return 2");
 
-        // فحص اسم مستخدم مكرر (يجب أن يرجع 1)
+        
         int resultDuplicateUser = User.signUp("newUser", "other@test.com", "pass", "users.json");
         assertEquals(1, resultDuplicateUser, "Duplicate username should return 1");
 
-        // فحص إيميل مكرر (يجب أن يرجع 2)
+        
         int resultDuplicateEmail = User.signUp("otherUser", "new@test.com", "pass", "users.json");
         assertEquals(2, resultDuplicateEmail, "Duplicate email should return 2");
     }
 
-    // دوال مساعدة لقرائة وكتابة الملفات بشكل آمن للباك أب
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {

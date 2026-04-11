@@ -19,7 +19,7 @@ public class ComponentsTest {
         assertEquals(Theme.FONT_TITLE, title.getFont());
 
         JLabel section = Components.sectionLabel("settings");
-        assertEquals("SETTINGS", section.getText()); // التأكد من تحويل النص لـ CAPS
+        assertEquals("SETTINGS", section.getText()); 
         assertEquals(Theme.ACCENT, section.getForeground());
     }
 
@@ -41,7 +41,7 @@ public class ComponentsTest {
         JButton sidebarBtn = Components.sidebarItem("🏠", "Home");
         assertNotNull(sidebarBtn);
         
-        // فحص تفعيل الزر
+        
         Components.setSidebarActive(sidebarBtn);
         assertEquals(Boolean.TRUE, sidebarBtn.getClientProperty("active"));
         assertEquals(Theme.ACCENT, sidebarBtn.getBackground());
@@ -89,12 +89,12 @@ public class ComponentsTest {
     @Test
     @DisplayName("Test Private Constructor and Inner Class")
     void testInternalStructure() throws Exception {
-        // لتغطية الباني الخاص بالـ Components
+        
         Constructor<Components> constructor = Components.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         assertNotNull(constructor.newInstance());
 
-        // فحص الـ RoundButton
+        
         Components.RoundButton rb = new Components.RoundButton("Test", Color.BLACK, Color.WHITE);
         rb.setBorderColor(Color.RED);
         assertNotNull(rb);

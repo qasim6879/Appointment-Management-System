@@ -39,17 +39,17 @@ public class UserDashboardTest {
 
     @BeforeEach
     void setup() {
-        // 1. تجهيز بيئة نظيفة مع مستخدم وهمي
+        
         List<User> users = new ArrayList<>();
         users.add(new User("tester", "test@user.com", "123"));
         JsonHandler.saveList(users, "users.json");
         
-        // ملف الأدمنز ضروري لأن الواجهة تبحث عنهم لملء الـ ComboBox
+        
         JsonHandler.saveList(new ArrayList<>(), "admins.json");
         JsonHandler.saveList(new ArrayList<>(), "appointments.json");
         JsonHandler.saveList(new ArrayList<>(), "notifications.json");
 
-        // 2. إنشاء الواجهة
+        
         dashboard = new UserDashboard("tester", () -> System.out.println("Logout"));
     }
 
@@ -57,15 +57,15 @@ public class UserDashboardTest {
     @DisplayName("Smoke Test: Dashboard Structure")
     void testInit() {
         assertNotNull(dashboard);
-        // التحقق من وجود المكونات الرئيسية (Sidebar و ContentPanel)
+        
         assertEquals(2, dashboard.getComponentCount());
     }
 
     @Test
     @DisplayName("Test Stats Calculation")
     void testStatsLogic() {
-        // هذا الاختبار يغطي دالة buildStats() التي تُستدعى في الـ Constructor
-        // حتى لو كانت الأرقام صفراً، الكود سيعمل ويتحول للأخضر
+        
+        
         assertDoesNotThrow(() -> {
             dashboard.repaint();
         });
@@ -74,22 +74,22 @@ public class UserDashboardTest {
     @Test
     @DisplayName("Test Tab Switching")
     void testNavigation() {
-        // اختبار التنقل بين التبويبات لتغطية دالة switchTo()
-        // ملاحظة: بما أن الأزرار private، فإن مجرد إنشاء الكائن غطى عملية ربط الـ Listeners
+        
+        
         assertNotNull(dashboard.getLayout());
     }
 
     @Test
     @DisplayName("Test Data Refresh Methods")
     void testRefreshMethods() {
-        // استدعاء الدوال التي تقوم بتحديث الجداول والإشعارات برمجياً
+        
         assertDoesNotThrow(() -> {
-            // هذه العمليات تحفز منطق التحديث الداخلي
+            
             dashboard.revalidate();
         });
     }
 
-    // دوال المساعدة للباك أب
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {

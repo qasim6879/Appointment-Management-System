@@ -32,14 +32,14 @@ public class AdminDashboardTest {
 
     @BeforeEach
     void setup() {
-        // 1. تجهيز بيانات وهمية لكي لا ينهار الكلاس عند التحميل
+        
         List<Administrator> admins = new ArrayList<>();
         admins.add(new Administrator("adminTest", "admin@test.com", "123"));
         JsonHandler.saveList(admins, "admins.json");
         JsonHandler.saveList(new ArrayList<>(), "appointments.json");
 
-        // 2. إنشاء الواجهة (في مسار الـ Swing)
-        // نستخدم الإدمن الذي أنشأناه
+        
+        
         dashboard = new AdminDashboard("adminTest", () -> {
             System.out.println("Logout clicked");
         });
@@ -50,26 +50,26 @@ public class AdminDashboardTest {
     void testDashboardInitialization() {
         assertNotNull(dashboard, "Dashboard should be instantiated");
         
-        // التحقق من أن المكونات الأساسية تم إنشاؤها (تغطية الـ Fields)
+        
         assertNotNull(dashboard.getComponent(0), "Dashboard should have components");
     }
 
     @Test
     @DisplayName("Test Sidebar Navigation")
     void testNavigation() {
-        // الوصول للأزرار عبر الـ Reflection أو ببساطة التأكد من أن الدوال لا تسبب Crash
-        // بما أن الأزرار private، سنختبر استدعاء التبديل برمجياً إذا كان متاحاً
-        // أو ببساطة نتحقق من أن الـ ContentPanel موجود
+        
+        
+        
         assertNotNull(dashboard.getLayout());
     }
 
     @Test
     @DisplayName("Test Table Data Loading")
     void testTableLoading() {
-        // هذا الاختبار سيغطي دالة loadTableData() و formatStatus و formatType
-        // حتى لو كانت القائمة فارغة، فإنه سيمر على الأسطر البرمجية
+        
+        
         assertDoesNotThrow(() -> {
-            // محاكاة إضافة موعد ثم إعادة التحميل
+            
             dashboard.revalidate();
         });
     }
@@ -77,14 +77,14 @@ public class AdminDashboardTest {
     @Test
     @DisplayName("Test Stats Refresh")
     void testStats() {
-        // استدعاء إعادة بناء الإحصائيات لتغطية الحسابات البرمجية
+        
         assertDoesNotThrow(() -> {
-            // الوصول للدالة عبر التحديث العام للواجهة
+            
             dashboard.repaint();
         });
     }
 
-    // دوال المساعدة للباك أب
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {

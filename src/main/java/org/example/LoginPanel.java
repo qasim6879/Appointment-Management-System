@@ -141,7 +141,7 @@ public class LoginPanel extends JPanel {
         usernameField.addActionListener(e -> handleSignIn());
         passwordField.addActionListener(e -> handleSignIn());
 
-        // "Don't have an account? Sign up" link
+        
         JPanel signUpRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         signUpRow.setOpaque(false);
         signUpRow.setAlignmentX(LEFT_ALIGNMENT);

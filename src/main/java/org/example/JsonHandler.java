@@ -17,7 +17,7 @@ import javax.swing.JOptionPane;
 
 public class JsonHandler {
 
-    // التعديل الجوهري هنا: إضافة الـ Adapters للتعامل مع الوقت والتاريخ
+    
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDate.class, new com.google.gson.TypeAdapter<LocalDate>() {
                 @Override
@@ -39,10 +39,10 @@ public class JsonHandler {
                     return LocalTime.parse(in.nextString());
                 }
             })
-            .setPrettyPrinting() // لجعل الملف مرتباً وسهل القراءة
+            .setPrettyPrinting() 
             .create();
 
-    // حفظ القائمة في ملف JSON
+    
     public static <T> void saveList(List<T> list, String fileName) {
         try (Writer writer = new FileWriter(fileName)) {
             gson.toJson(list, writer);
@@ -55,7 +55,7 @@ public class JsonHandler {
         }
     }
 
-    // تحميل القائمة من ملف JSON
+    
     public static <T> List<T> loadList(String fileName, Class<T> clazz) {
         File file = new File(fileName);
         if (!file.exists()) return new ArrayList<>();

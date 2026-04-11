@@ -59,7 +59,7 @@ public class UserDashboard extends JPanel {
         add(buildMain(),    BorderLayout.CENTER);
     }
 
-    // ── Sidebar ───────────────────────────────────────────────
+    
 
     private JPanel buildSidebar() {
         JPanel side = new JPanel();
@@ -125,7 +125,7 @@ public class UserDashboard extends JPanel {
         }
     }
 
-    // ── Main shell ────────────────────────────────────────────
+    
 
     private JPanel buildMain() {
         JPanel main = new JPanel(new BorderLayout());
@@ -191,7 +191,7 @@ public class UserDashboard extends JPanel {
         return sp;
     }
 
-    // ── VIEW 1 — MY APPOINTMENTS ──────────────────────────────
+    
 
     private JPanel buildAppointmentsView() {
         JPanel view = new JPanel();
@@ -338,7 +338,7 @@ public class UserDashboard extends JPanel {
         if (apptModel == null)
             return;
 
-        // Auto-cancel past pending appointments
+        
         User user = User.getUserObject(username);
         for (Appointment a : user.getUserAppointments()) {
             LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
@@ -362,7 +362,7 @@ public class UserDashboard extends JPanel {
         }
     }
 
-    // ── VIEW 2 — BOOK APPOINTMENT ─────────────────────────────
+    
 
     private JPanel buildBookView() {
         JPanel view = new JPanel();
@@ -667,7 +667,7 @@ public class UserDashboard extends JPanel {
         return l;
     }
 
-    // ── VIEW 3 — NOTIFICATIONS ────────────────────────────────
+    
 
     private JPanel buildNotificationsView() {
         JPanel view = new JPanel();
@@ -690,9 +690,9 @@ public class UserDashboard extends JPanel {
         
         mark.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
-                // حذف نهائي من الـ JSON
+                
                 Notification.deleteAllNotifications(username);
-                // تنظيف الواجهة
+                
                 notifsList.removeAll();
                 notifsList.revalidate();
                 notifsList.repaint();
@@ -778,7 +778,7 @@ public class UserDashboard extends JPanel {
         x.setContentAreaFilled(false);
         x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         x.addActionListener(e -> {
-            Notification.deleteNotification(notif);   // ← removes from JSON
+            Notification.deleteNotification(notif);   
             Container parent = row.getParent();
             parent.remove(row);
             parent.revalidate();
@@ -825,7 +825,7 @@ public class UserDashboard extends JPanel {
         x.setFocusPainted(false);
         x.setContentAreaFilled(false);
         x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        //x.setPreferredSize(new Dimension(36, 36));
+        
         x.addActionListener(e -> {
             Container parent = row.getParent();
             parent.remove(row);
@@ -839,7 +839,7 @@ public class UserDashboard extends JPanel {
         return row;
     }
 
-    // ── Helpers ───────────────────────────────────────────────
+    
 
     private JPanel legendDot(Color color, String label) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
@@ -858,7 +858,7 @@ public class UserDashboard extends JPanel {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
-    // ── Table Cell Renderers ──────────────────────────────────
+    
 
     private static Color rowBg(boolean sel, int row) {
         return sel ? new Color(0xE8,0xE2,0xD8) : (row % 2 == 0 ? Theme.CARD : new Color(0xF2,0xEE,0xE6));
@@ -942,16 +942,16 @@ public class UserDashboard extends JPanel {
                                 "Cancel this appointment?\nThe slot will become available again.",
                                 "Confirm Cancellation", JOptionPane.YES_NO_OPTION);
                         if (r == JOptionPane.YES_OPTION) {
-                            // Cancel the appointment in the model
+                            
                             Appointment appt = User.getUserObject(username).getUserAppointments().get(row);
                             User.getUserObject(username).cancelAppointment(appt);
 
-                            stopCellEditing();                  // stop editing first
+                            stopCellEditing();                  
 
-                            // Tell the table to redraw just this cell
+                            
                             apptModel.fireTableCellUpdated(row, 6);
 
-                            // Optional: refresh entire table if needed
+                            
                             refreshAppointmentsTable();
                         } else {
                             stopCellEditing();

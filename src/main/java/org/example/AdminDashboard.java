@@ -41,7 +41,7 @@ public class AdminDashboard extends JPanel {
     private final String         adminName;
     private final LogoutListener logoutListener;
 
-    // Table fields
+    
     private JTable            table;
     private DefaultTableModel tableModel;
     private JTextField        searchField;
@@ -55,7 +55,7 @@ public class AdminDashboard extends JPanel {
     private JButton btnNotifs;
 
     private JPanel statsPanel;
-    // Add-appointment form fields
+    
     private JTextField          addUserField;
     private JComboBox<String>   addTypeBox;
     private JPanel              addSlotGrid   = new JPanel(new GridLayout(3, 4, 8, 8));
@@ -64,7 +64,7 @@ public class AdminDashboard extends JPanel {
     private JToggleButton       addDur30;
     private JToggleButton       addDur60;
 
-    // Live data & booking state
+    
     private Administrator        adminObj;
     private final List<Object[]>    liveData  = new ArrayList<>();
     private final List<Appointment> liveAppts = new ArrayList<>();
@@ -95,7 +95,7 @@ public class AdminDashboard extends JPanel {
         loadTableData();
     }
 
-    // ── Sidebar ───────────────────────────────────────────────
+    
 
     private JPanel buildSidebar() {
         JPanel side = new JPanel();
@@ -160,7 +160,7 @@ public class AdminDashboard extends JPanel {
         }
     }
 
-    // ── Outer shell ───────────────────────────────────────────
+    
 
     private JPanel buildMain() {
         JPanel main = new JPanel(new BorderLayout());
@@ -232,9 +232,9 @@ public class AdminDashboard extends JPanel {
         return sp;
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 1 — ALL RESERVATIONS
-    // ══════════════════════════════════════════════════════════
+    
+    
+    
 
     private JPanel buildReservationsView() {
         JPanel view = new JPanel();
@@ -263,17 +263,17 @@ public class AdminDashboard extends JPanel {
             LocalDateTime apptTime = LocalDateTime.of(a.getDate(), a.getStartTime());
             String status = a.getStatus().toString().toUpperCase();
 
-            // Completed
+            
             if (apptTime.isBefore(now) && status.equals("CONFIRMED"))
                 completed++;
 
-            // Today reminders
+            
             if (a.getDate().equals(today) &&
                     apptTime.isAfter(now) &&
                     !status.equals("CANCELLED"))
                 todayReminders++;
 
-            // Cancelled
+            
             if (status.equals("CANCELLED"))
                 cancelled++;
         }
@@ -299,7 +299,7 @@ public class AdminDashboard extends JPanel {
         cardTitle.setForeground(Theme.MUTED);
         card.add(cardTitle, BorderLayout.NORTH);
 
-        // Search bar
+        
         JPanel controls = new JPanel(new BorderLayout(0, 8));
         controls.setOpaque(false);
 
@@ -327,7 +327,7 @@ public class AdminDashboard extends JPanel {
         searchRow.add(searchIcon,  BorderLayout.WEST);
         searchRow.add(searchField, BorderLayout.CENTER);
 
-        // Filter pills
+        
         JPanel pills = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         pills.setOpaque(false);
         String[] filters = {"All", "Confirmed", "Pending", "Urgent", "Virtual", "Group", "Today", "This week"};
@@ -349,7 +349,7 @@ public class AdminDashboard extends JPanel {
         controls.add(pills,     BorderLayout.SOUTH);
         card.add(controls, BorderLayout.CENTER);
 
-        // Table
+        
         String[] cols = {"#", "User", "Type", "Date & Time", "Duration", "Participants", "Status", "Admin Actions"};
         tableModel = new DefaultTableModel(new Object[0][], cols) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
@@ -386,9 +386,9 @@ public class AdminDashboard extends JPanel {
         return wrap;
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 2 — ADD APPOINTMENT
-    // ══════════════════════════════════════════════════════════
+    
+    
+    
 
     private JPanel buildAddAppointmentView() {
         JPanel view = new JPanel();
@@ -655,11 +655,11 @@ public class AdminDashboard extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setUndecorated(true);
 
-        // ── State ──────────────────────────────────────────────
+        
         final LocalDate[] editDate = { appt.getDate() };
         final int[] editDuration = { appt.getDuration() };
 
-        // ── Root panel ─────────────────────────────────────────
+        
         JPanel root = new JPanel();
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         root.setBackground(Theme.CARD);
@@ -667,7 +667,7 @@ public class AdminDashboard extends JPanel {
                 new LineBorder(Theme.BORDER, 1),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
-        // Title
+        
         JLabel titleLbl = new JLabel("EDIT APPOINTMENT");
         titleLbl.setFont(Theme.FONT_LABEL);
         titleLbl.setForeground(Theme.MUTED);
@@ -678,7 +678,7 @@ public class AdminDashboard extends JPanel {
         userLbl.setForeground(Theme.INK);
         userLbl.setAlignmentX(LEFT_ALIGNMENT);
 
-        // ── Date picker row ────────────────────────────────────
+        
         String initMonth = appt.getDate().getMonth().toString();
         String initMon = initMonth.charAt(0) + initMonth.substring(1, 3).toLowerCase();
         JLabel dateLbl = new JLabel("Date:  " + initMon + " " + appt.getDate().getDayOfMonth());
@@ -697,32 +697,32 @@ public class AdminDashboard extends JPanel {
         dateRow.add(dateLbl, BorderLayout.WEST);
         dateRow.add(changeDateLink, BorderLayout.EAST);
 
-        // ── Type combo ─────────────────────────────────────────
+        
         String[] typeOptions = { "Urgent", "Follow-up", "Assessment", "Virtual", "In-person", "Individual", "Group" };
         JComboBox<String> typeBox = Components.comboBox(typeOptions);
         typeBox.setAlignmentX(LEFT_ALIGNMENT);
         typeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         typeBox.setSelectedItem(formatType(appt.getType()));
 
-        // ── Duration combo ─────────────────────────────────────
+        
         JComboBox<String> durBox = Components.comboBox(new String[] { "30 min", "60 min" });
         durBox.setAlignmentX(LEFT_ALIGNMENT);
         durBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         durBox.setSelectedItem(appt.getDuration() + " min");
 
-        // ── Time combo (dynamic) ───────────────────────────────
+        
         JComboBox<String> timeBox = Components.comboBox(new String[] { "— pick date first —" });
         timeBox.setAlignmentX(LEFT_ALIGNMENT);
         timeBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Helper: refresh time combo based on current editDate + editDuration
+        
         Runnable refreshTimes = () -> {
             String currentSel = timeBox.getSelectedItem() != null ? timeBox.getSelectedItem().toString() : "";
             timeBox.removeAllItems();
             String[] slots = { "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
                     "12:00", "12:30", "13:00", "13:30", "14:00", "14:30" };
             boolean[] available = Appointment.availableTimeSlots(editDate[0], adminName, editDuration[0]);
-            // Always include the appointment's own current slot so it's selectable
+            
             String currentApptTime = String.format("%02d:%02d",
                     appt.getStartTime().getHour(), appt.getStartTime().getMinute());
             boolean anyAdded = false;
@@ -734,7 +734,7 @@ public class AdminDashboard extends JPanel {
             }
             if (!anyAdded)
                 timeBox.addItem("— no slots available —");
-            // Restore previous selection if still available, else default to current appt time
+            
             if (timeBox.getItemCount() > 0) {
                 boolean restored = false;
                 for (int i = 0; i < timeBox.getItemCount(); i++) {
@@ -757,14 +757,14 @@ public class AdminDashboard extends JPanel {
 
         refreshTimes.run();
 
-        // Wire duration changes → refresh times
+        
         durBox.addActionListener(e -> {
             String sel = (String) durBox.getSelectedItem();
             editDuration[0] = sel != null && sel.startsWith("60") ? 60 : 30;
             refreshTimes.run();
         });
 
-        // Wire date change link → calendar picker → refresh times
+        
         changeDateLink.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -876,7 +876,7 @@ public class AdminDashboard extends JPanel {
             }
         });
 
-        // ── Confirm button ─────────────────────────────────────
+        
         JButton confirmBtn = Components.primaryBtn("Save Changes  →");
         confirmBtn.setAlignmentX(LEFT_ALIGNMENT);
         confirmBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
@@ -895,7 +895,7 @@ public class AdminDashboard extends JPanel {
             loadTableData();
         });
 
-        // ── Cancel button ──────────────────────────────────────
+        
         JButton cancelBtn = Components.dangerBtn("Discard");
         cancelBtn.setAlignmentX(LEFT_ALIGNMENT);
         cancelBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
@@ -908,7 +908,7 @@ public class AdminDashboard extends JPanel {
         btnRow.add(cancelBtn);
         btnRow.add(confirmBtn);
 
-        // ── Assemble ───────────────────────────────────────────
+        
         root.add(titleLbl);
         root.add(Box.createVerticalStrut(4));
         root.add(userLbl);
@@ -1030,7 +1030,7 @@ public class AdminDashboard extends JPanel {
                 type.toUpperCase().replace("-", "_").replace(" ", "_")
         );
 
-     // التعديل هنا: نجعل الإدمن هو من يقوم بفعل الحجز وليس اليوزر
+     
         adminObj.bookAppointment(targetUser, pickedAddDate, startTime, pickedAddDuration, apptType);
         refreshAddSlots();
 
@@ -1043,7 +1043,7 @@ public class AdminDashboard extends JPanel {
                         + "Duration: " + pickedAddDuration + " min",
                 "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
 
-        // Reset form
+        
         addUserField.setText("");
         addTypeBox.setSelectedIndex(0);
         addSlotGroup.clearSelection();
@@ -1057,9 +1057,9 @@ public class AdminDashboard extends JPanel {
         switchTo(CARD_RESERVATIONS);
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  VIEW 3 — NOTIFICATIONS
-    // ══════════════════════════════════════════════════════════
+    
+    
+    
 
     private JPanel buildNotificationsView() {
         JPanel view = new JPanel();
@@ -1091,7 +1091,7 @@ public class AdminDashboard extends JPanel {
 
         mark.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
-                Notification.deleteAllNotifications(adminName); // حذف نهائي
+                Notification.deleteAllNotifications(adminName); 
                 adminNotifsList.removeAll();
                 adminNotifsList.revalidate();
                 adminNotifsList.repaint();
@@ -1111,7 +1111,7 @@ public class AdminDashboard extends JPanel {
 
     private void rebuildAdminNotifs() {
         adminNotifsList.removeAll();
-        // جلب الإشعارات الحقيقية الخاصة بهذا الإدمن من ملف JSON
+        
         List<Notification> realNotifs = Notification.getNotifications(adminName);
 
         if (realNotifs == null || realNotifs.isEmpty()) {
@@ -1121,14 +1121,14 @@ public class AdminDashboard extends JPanel {
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             adminNotifsList.add(empty);
         } else {
-            // ترتيب التنبيهات (الأحدث فوق)
+            
             Collections.reverse(realNotifs);
             for (Notification n : realNotifs) {
             	if (n.isActive()) {
                     String icon = (n.getType() == NotificationType.CANCELLATION) ? "❌" : "🔔";
                     Color accent = (n.getType() == NotificationType.CONFIRMATION) ? Theme.SUCCESS : Theme.ACCENT;
 
-                    // التعديل هنا: نمرر n كأول باراميتر
+                    
                     adminNotifsList.add(buildAdminNotifRow(n, icon, accent));
             	}}
         }
@@ -1136,7 +1136,7 @@ public class AdminDashboard extends JPanel {
         adminNotifsList.repaint();
     }
 
- // تعديل دالة buildAdminNotifRow (Existing Function - Changed Parameters)
+ 
     private JPanel buildAdminNotifRow(Notification n, String icon, Color accent) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setBackground(Theme.PAPER);
@@ -1157,17 +1157,17 @@ public class AdminDashboard extends JPanel {
         JButton x = new JButton("✖");
         x.setFont(new Font("SansSerif", Font.PLAIN, 20));
         x.setForeground(Color.RED);
-        x.setBorderPainted(false);      // سطر جديد: لإزالة الإطار (المربع)
-        x.setFocusPainted(false);       // سطر جديد: لإزالة مربع التنقيط عند الضغط
-        x.setContentAreaFilled(false);  // لجعل الخلفية شفافة
-        x.setOpaque(false);             // لجعل الزر شفافاً تمام
+        x.setBorderPainted(false);      
+        x.setFocusPainted(false);       
+        x.setContentAreaFilled(false);  
+        x.setOpaque(false);             
         x.setContentAreaFilled(false);
         x.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        // الأكشن الجديد للحذف النهائي من JSON عند الضغط على X
+        
         x.addActionListener(e -> {
-            Notification.deleteNotification(n); // حذف نهائي من JSON
-            adminNotifsList.remove(row);        // حذف من الواجهة
+            Notification.deleteNotification(n); 
+            adminNotifsList.remove(row);        
             adminNotifsList.revalidate();
             adminNotifsList.repaint();
         });
@@ -1178,7 +1178,7 @@ public class AdminDashboard extends JPanel {
         return row;
     }
 
-    // ── Form helpers ──────────────────────────────────────────
+    
 
     private JPanel mkFormRow(String labelText, JComponent field) {
         JPanel row = new JPanel();
@@ -1206,7 +1206,7 @@ public class AdminDashboard extends JPanel {
         return row;
     }
 
-    // ── Data loading ──────────────────────────────────────────
+    
 
     private void loadTableData() {
         liveData.clear();
@@ -1269,7 +1269,7 @@ public class AdminDashboard extends JPanel {
         return mon + " " + date.getDayOfMonth() + t;
     }
 
-    // ── Table helpers ─────────────────────────────────────────
+    
 
     private void filterTable(String query) {
         tableModel.setRowCount(0);
@@ -1282,7 +1282,7 @@ public class AdminDashboard extends JPanel {
         }
     }
 
-    // ── Widget helpers ────────────────────────────────────────
+    
 
     private JButton mkSideBtn(String icon, String label) {
         JButton b = Components.sidebarItem(icon, label);
@@ -1317,7 +1317,7 @@ public class AdminDashboard extends JPanel {
         }
     }
 
-    // ── Cell Renderers ────────────────────────────────────────
+    
 
     private static class StatusRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable t, Object v,

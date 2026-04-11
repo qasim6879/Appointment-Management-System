@@ -38,7 +38,7 @@ public class AppointmentTest {
 
     @BeforeEach
     void setup() {
-        // تنظيف الملفات قبل كل تست
+        
         JsonHandler.saveList(new ArrayList<>(), "appointments.json");
         
         testUser = new User("patient1", "p1@test.com", "123");
@@ -54,15 +54,15 @@ public class AppointmentTest {
     @Test
     @DisplayName("Test Max Participants based on Appointment Type")
     void testMaxParticipantsLogic() {
-        // فحص نوع URGENT (يجب أن يكون 1)
+        
         Appointment appt1 = new Appointment(testUser, testAdmin, LocalDate.now(), LocalTime.of(9, 0), 30, AppointmentType.URGENT, AppointmentStatus.PENDING);
         assertEquals(1, appt1.getMaxParticipants());
 
-        // فحص نوع VIRTUAL (يجب أن يكون 5)
+        
         appt1.setType(AppointmentType.VIRTUAL);
         assertEquals(5, appt1.getMaxParticipants());
 
-        // فحص نوع INDIVIDUAL (يجب أن يكون 1)
+        
         appt1.setType(AppointmentType.INDIVIDUAL);
         assertEquals(1, appt1.getMaxParticipants());
     }
@@ -73,7 +73,7 @@ public class AppointmentTest {
         LocalDate date = LocalDate.of(2025, 6, 1);
         boolean[] available = Appointment.availableTimeSlots(date, "doctor1", 30);
         
-        // في البداية كل الخانات الـ 12 يجب أن تكون متاحة (true)
+        
         for (boolean slot : available) {
             assertTrue(slot);
         }
@@ -84,7 +84,7 @@ public class AppointmentTest {
     void testAvailableSlotsWithBookings() {
         LocalDate date = LocalDate.of(2025, 6, 1);
         
-        // 1. حجز موعد الساعة 9:00 (Index 0) لمدة 30 دقيقة
+        
         List<Appointment> list = new ArrayList<>();
         list.add(new Appointment(testUser, testAdmin, date, LocalTime.of(9, 0), 30, AppointmentType.INDIVIDUAL, AppointmentStatus.CONFIRMED));
         JsonHandler.saveList(list, "appointments.json");
@@ -99,8 +99,8 @@ public class AppointmentTest {
     void test60MinImpact() {
         LocalDate date = LocalDate.of(2025, 6, 1);
         
-        // حجز موعد 60 دقيقة يبدأ الساعة 10:00 (Index 2)
-        // هذا يعني أنه سيشغل Index 2 و Index 3 (10:00 و 10:30)
+        
+        
         List<Appointment> list = new ArrayList<>();
         list.add(new Appointment(testUser, testAdmin, date, LocalTime.of(10, 0), 60, AppointmentType.INDIVIDUAL, AppointmentStatus.CONFIRMED));
         JsonHandler.saveList(list, "appointments.json");
@@ -116,7 +116,7 @@ public class AppointmentTest {
     void testCancelledApptDoesNotBlock() {
         LocalDate date = LocalDate.of(2025, 6, 1);
         
-        // حجز موعد لكن حالته ملغي (CANCELLED)
+        
         List<Appointment> list = new ArrayList<>();
         list.add(new Appointment(testUser, testAdmin, date, LocalTime.of(9, 0), 30, AppointmentType.INDIVIDUAL, AppointmentStatus.CANCELLED));
         JsonHandler.saveList(list, "appointments.json");
@@ -130,18 +130,18 @@ public class AppointmentTest {
     void testRequested60MinLogic() {
         LocalDate date = LocalDate.of(2025, 6, 1);
         
-        // حجز موعد الساعة 10:30 (Index 3)
+        
         List<Appointment> list = new ArrayList<>();
         list.add(new Appointment(testUser, testAdmin, date, LocalTime.of(10, 30), 30, AppointmentType.INDIVIDUAL, AppointmentStatus.CONFIRMED));
         JsonHandler.saveList(list, "appointments.json");
 
-        // إذا طلب المستخدم موعداً مدته 60 دقيقة
-        // الكود لديك في الكلاس يمنع الحجز في الخانة السابقة (Index 2) لكي لا يتداخل موعد الـ 60 دقيقة مع موعد الـ 10:30
+        
+        
         boolean[] available = Appointment.availableTimeSlots(date, "doctor1", 60);
         assertFalse(available[2], "Slot 10:00 should be unavailable if requesting 60 mins because 10:30 is busy");
     }
 
-    // دوال المساعدة
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {

@@ -32,13 +32,13 @@ public class LoginPanelTest {
 
     @BeforeEach
     void setup() {
-        // تنظيف الملفات قبل التست
+        
         JsonHandler.saveList(new ArrayList<>(), "users.json");
         JsonHandler.saveList(new ArrayList<>(), "admins.json");
         
         loginCallbackTriggered = false;
         
-        // إنشاء الـ Panel مع Listener وهمي
+        
         loginPanel = new LoginPanel((username, isAdmin) -> {
             loginCallbackTriggered = true;
         });
@@ -54,11 +54,11 @@ public class LoginPanelTest {
     @Test
     @DisplayName("Test UI Error Display Logic")
     void testErrorDisplay() {
-        // بما أن الدوال private، سنقوم باختبار سلوك الواجهة عند محاولة تسجيل دخول فارغ
-        // هذا سيحفز دالة showError() داخلياً
+        
+        
         assertDoesNotThrow(() -> {
-            // محاكاة الضغط على زر الدخول والحقول فارغة
-            // ملاحظة: الوصول للمكونات الخاصة يتم عبر التست لضمان التغطية
+            
+            
             loginPanel.revalidate();
             loginPanel.repaint();
         });
@@ -67,23 +67,23 @@ public class LoginPanelTest {
     @Test
     @DisplayName("Test Role Toggle Logic")
     void testToggles() {
-        // فحص أن الواجهة تبدأ باختيار "User" كوضع افتراضي
+        
         assertNotNull(loginPanel);
-        // في Swing، المكونات تكون مرتبة في مصفوفة، هذا التست يضمن تحميل الأكواد الخاصة بالتنسيق
+        
         loginPanel.getComponents(); 
     }
 
     @Test
     @DisplayName("Test Signup Dialog Opening")
     void testOpenSignup() {
-        // هذا التست سيقوم بتشغيل كود فتح الـ Dialog (تغطية أسطر الـ Signup)
+        
         assertDoesNotThrow(() -> {
-            // يمكننا استدعاء العمليات التي تفتح النوافذ للتأكد من عدم وجود Logic Errors
-            // في JUnit، النوافذ ستفتح وتغلق في الذاكرة
+            
+            
         });
     }
 
-    // دوال مساعدة للتعامل مع الملفات
+    
     private String readFileSafe(String filename) {
         try {
             if (Files.exists(Paths.get(filename))) {

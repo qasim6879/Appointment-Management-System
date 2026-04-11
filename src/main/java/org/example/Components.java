@@ -18,7 +18,7 @@ public final class Components {
 
     private Components() {}
 
-    // ── Labels ────────────────────────────────────────────────
+    
 
     /**
      * Creates a section micro-label (ALL CAPS, accent color).
@@ -56,7 +56,7 @@ public final class Components {
         return l;
     }
 
-    // ── Buttons ───────────────────────────────────────────────
+    
 
     /**
      * Primary CTA button (red background, white text).
@@ -135,7 +135,7 @@ public final class Components {
         b.setForeground(Theme.WHITE);
     }
 
-    // ── Inputs ────────────────────────────────────────────────
+    
 
     /**
      * Creates a styled text field with placeholder hint.
@@ -198,7 +198,7 @@ public final class Components {
         return cb;
     }
 
-    // ── Panels ────────────────────────────────────────────────
+    
 
     /**
      * Creates a card panel with border and light background.
@@ -236,7 +236,7 @@ public final class Components {
         return p;
     }
 
-    // ── Status Tags ───────────────────────────────────────────
+    
 
     /**
      * Creates a colored status tag label.
@@ -275,7 +275,7 @@ public final class Components {
     /** @return a "Group" tag */
     public static JLabel tagGroup()     { return tag("Group",     Theme.TAG_GROUP_BG,     Theme.TAG_GROUP_FG); }
 
-    // ── Table ─────────────────────────────────────────────────
+    
 
     /**
      * Applies AppointEase styling to a JTable.
@@ -312,7 +312,7 @@ public final class Components {
         });
     }
 
-    // ── Divider ───────────────────────────────────────────────
+    
 
     /**
      * Creates a thin horizontal separator line.
@@ -326,7 +326,7 @@ public final class Components {
         return s;
     }
 
-    // ── Notification Row ──────────────────────────────────────
+    
 
     /**
      * Creates a notification row panel with left accent border.
@@ -361,7 +361,7 @@ public final class Components {
         return row;
     }
 
-    // ── Round Button ──────────────────────────────────────────
+    
 
     /**
      * A custom JButton with rounded corners and hover darkening effect.

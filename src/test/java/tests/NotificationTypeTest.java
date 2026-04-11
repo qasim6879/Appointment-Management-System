@@ -10,7 +10,7 @@ public class NotificationTypeTest {
     @Test
     @DisplayName("Test NotificationType Enum Values")
     void testEnumValues() {
-        // التحقق من وجود جميع القيم
+        
         NotificationType[] types = NotificationType.values();
         assertEquals(3, types.length, "Enum should have 3 constants");
         
@@ -22,7 +22,7 @@ public class NotificationTypeTest {
     @Test
     @DisplayName("Test Enum constants names")
     void testEnumNames() {
-        // التأكد من أن الأسماء لم تتغير (مهم لاستقرار الـ JSON)
+        
         assertEquals("REMINDER", NotificationType.REMINDER.name());
         assertEquals("CONFIRMATION", NotificationType.CONFIRMATION.name());
         assertEquals("CANCELLATION", NotificationType.CANCELLATION.name());

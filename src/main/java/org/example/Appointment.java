@@ -53,8 +53,8 @@ public class Appointment {
 		return maxParticipants;
 	}
 
-	//public void setUser(User user) { this.user = user; }
-	//public void setAdmin(Administrator admin) { this.admin = admin; }
+	
+	
 	public void setDate(LocalDate date) { this.date = date; }
 	public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 	public void setDuration(int duration) { this.duration = duration; }
