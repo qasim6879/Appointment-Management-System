@@ -542,5 +542,37 @@
       "password": "888"
     },
     "type": "REMINDER"
+  },
+  {
+    "dateSent": "2026-04-10 07:26:02",
+    "message": "Request sent to Admin: victor. Status: Pending.",
+    "active": true,
+    "user": {
+      "username": "Ali",
+      "email": "s12340285@stu.najah.edu",
+      "password": "123456789"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "type": "CONFIRMATION"
+  },
+  {
+    "dateSent": "2026-04-10 07:26:07",
+    "message": "New booking request from Ali on 2026-04-23",
+    "active": true,
+    "user": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "type": "REMINDER"
   }
 ]

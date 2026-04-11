@@ -4,13 +4,18 @@ import org.example.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.Mockito.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 public class NotificationTest {
 
     private String backupNotifications = "[]";
@@ -182,4 +187,50 @@ public class NotificationTest {
             Files.write(Paths.get(filename), content.getBytes());
         } catch (IOException e) { e.printStackTrace(); }
     }
+    
+    
+ // ─────────────────────────────────────────────
+    // Mockito Tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Mock observer receives correct notification message")
+    void testMockObserver_ReceivesMessage() {
+        List<String> received = new ArrayList<>();
+        NotificationObserver fakeObserver = (msg, user, admin, type) -> received.add(msg);
+        ObserverManager.addObserver(fakeObserver);
+
+        ObserverManager.notifyObservers("Test message", testUser1, testAdmin, NotificationType.CONFIRMATION);
+
+        assertTrue(received.contains("Test message"));
+    }
+
+    @Test
+    @DisplayName("Mock observer receives CANCELLATION type correctly")
+    void testMockObserver_CancellationType() {
+        List<NotificationType> receivedTypes = new ArrayList<>();
+        NotificationObserver fakeObserver = (msg, user, admin, type) -> receivedTypes.add(type);
+        ObserverManager.addObserver(fakeObserver);
+
+        ObserverManager.notifyObservers("Cancelled", testUser1, testAdmin, NotificationType.CANCELLATION);
+
+        assertTrue(receivedTypes.contains(NotificationType.CANCELLATION));
+    }
+
+    @Test
+    @DisplayName("Mock time - Notification dateSent format is correct")
+    void testNotification_DateSentFormat() {
+        Notification n = new Notification("msg", true, testUser1, testAdmin, NotificationType.REMINDER);
+        String dateSent = n.getDateSent();
+
+        assertNotNull(dateSent);
+        assertTrue(dateSent.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"),
+            "Date format should be yyyy-MM-dd HH:mm:ss");
+    }
+    
+    
+    
+    
+    
+    
 }

@@ -70,5 +70,23 @@
     "type": "FOLLOW_UP",
     "status": "PENDING",
     "maxParticipants": 3
+  },
+  {
+    "user": {
+      "username": "Ali",
+      "email": "s12340285@stu.najah.edu",
+      "password": "123456789"
+    },
+    "admin": {
+      "username": "victor",
+      "email": "victor@gmail.com",
+      "password": "888"
+    },
+    "date": "2026-04-23",
+    "startTime": "10:30:00",
+    "duration": 30,
+    "type": "ASSESSMENT",
+    "status": "PENDING",
+    "maxParticipants": 3
   }
 ]
