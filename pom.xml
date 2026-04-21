@@ -74,6 +74,11 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.8.11</version>
             <executions>
+                     <execution>
+    <id>report</id>
+    <goals><goal>report</goal></goals>
+    <phase>verify</phase>  <!-- must run before sonar:sonar -->
+</execution>
                 <execution>
                     <id>prepare-agent</id>
                     <goals>
