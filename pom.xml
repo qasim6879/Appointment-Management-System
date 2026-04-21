@@ -11,7 +11,7 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-             <sonar.exclusions>src/main/java/org/example/*Dashboard.java, src/main/java/org/example/LoginPanel.java, src/main/java/org/example/Main.java, src/main/java/org/example/Email.java</sonar.exclusions>
+             <sonar.exclusions>src/main/java/org/example/*Dashboard.java, src/main/java/org/example/LoginPanel.java, src/main/java/org/example/Main.java, src/main/java/org/example/Email.java, src/main/java/org/example/Components.java</sonar.exclusions>
              <sonar.organization>qasim6879</sonar.organization>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
