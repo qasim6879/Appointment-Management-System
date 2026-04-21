@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class Adminstratortest {
+public class AdminstratorTest {
 
     
     private String backupAdmins = "[]";
